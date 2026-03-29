@@ -15,7 +15,7 @@ var validName = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]*$`)
 // Create creates a new isolated browser profile.
 func Create(name, browser string) (*Profile, error) {
 	if !validName.MatchString(name) {
-		return nil, fmt.Errorf("invalid profile name %q: must start with alphanumeric and contain only alphanumeric, hyphens, underscores", name)
+		return nil, fmt.Errorf("invalid profile name %q: must start with letter/number and contain only letters, numbers, hyphens, underscores (e.g. 'my-profile', 'work_staging')", name)
 	}
 
 	cfg, unlock, err := config.LoadWithLock()
@@ -27,7 +27,7 @@ func Create(name, browser string) (*Profile, error) {
 	// Check for duplicate name
 	for _, p := range cfg.Profiles {
 		if p.Name == name {
-			return nil, fmt.Errorf("profile %q already exists", name)
+			return nil, fmt.Errorf("profile %q already exists. To recreate, delete it first: bpm delete %s", name, name)
 		}
 	}
 
@@ -128,7 +128,7 @@ func Get(name string) (*Profile, error) {
 			}, nil
 		}
 	}
-	return nil, fmt.Errorf("profile %q not found", name)
+	return nil, fmt.Errorf("profile %q not found. Run 'bpm list' to see available profiles", name)
 }
 
 // Delete removes a profile from config and optionally deletes its data directory.
@@ -202,4 +202,57 @@ func UpdateLastUsed(name string) error {
 		}
 	}
 	return fmt.Errorf("profile %q not found", name)
+}
+
+// Rename changes a profile's name and moves its data directory.
+func Rename(oldName, newName string) error {
+	if !validName.MatchString(newName) {
+		return fmt.Errorf("invalid profile name %q: must start with letter/number and contain only letters, numbers, hyphens, underscores", newName)
+	}
+
+	cfg, unlock, err := config.LoadWithLock()
+	if err != nil {
+		return fmt.Errorf("cannot load config: %w", err)
+	}
+	defer unlock()
+
+	// Find old profile and check new name not taken
+	idx := -1
+	for i, p := range cfg.Profiles {
+		if p.Name == oldName {
+			idx = i
+		}
+		if p.Name == newName {
+			return fmt.Errorf("profile %q already exists", newName)
+		}
+	}
+	if idx == -1 {
+		return fmt.Errorf("profile %q not found", oldName)
+	}
+
+	// Check not locked
+	locked, lockInfo := IsLocked(cfg.Profiles[idx].DataDir)
+	if locked {
+		return fmt.Errorf("profile %q is locked by PID %d (%s). Close the browser first", oldName, lockInfo.PID, lockInfo.Caller)
+	}
+
+	// Rename data directory
+	oldDir := cfg.Profiles[idx].DataDir
+	newDir := filepath.Join(filepath.Dir(oldDir), newName)
+	if err := os.Rename(oldDir, newDir); err != nil {
+		return fmt.Errorf("cannot rename directory: %w", err)
+	}
+
+	// Update config
+	cfg.Profiles[idx].Name = newName
+	cfg.Profiles[idx].DataDir = newDir
+
+	// Update any mappings
+	for i, m := range cfg.Mappings {
+		if m.Profile == oldName {
+			cfg.Mappings[i].Profile = newName
+		}
+	}
+
+	return config.SaveWithLock(cfg)
 }

@@ -115,6 +115,11 @@ func (a *App) DeleteProfile(name string, force bool) error {
 	return profile.Delete(name, force)
 }
 
+// RenameProfile changes a profile's name.
+func (a *App) RenameProfile(oldName, newName string) error {
+	return profile.Rename(oldName, newName)
+}
+
 // --- Browser operations ---
 
 // DetectBrowsers returns all installed Chromium-based browsers.

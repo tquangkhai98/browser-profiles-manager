@@ -195,6 +195,9 @@ function renderProfiles() {
                     <button class="btn-icon" onclick="viewCredentials('${escapeAttr(p.name)}')" title="View credentials">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8s2.5-4 6-4 6 4 6 4-2.5 4-6 4-6-4-6-4z" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/></svg>
                     </button>
+                    <button class="btn-icon" onclick="openEditModal('${escapeAttr(p.name)}')" title="Edit profile">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
                     <button class="btn-icon danger" onclick="confirmDelete('${escapeAttr(p.name)}')" title="Delete profile">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 5h10M5 5V3h6v2M6 7v4M10 7v4M4 5l1 8h6l1-8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
@@ -235,7 +238,10 @@ function bindEvents() {
     // Header buttons
     document.getElementById('btn-create-header').addEventListener('click', openCreateModal);
     document.getElementById('btn-import-header').addEventListener('click', openImportModal);
-    document.getElementById('btn-settings').addEventListener('click', openSettings);
+    document.getElementById('btn-settings').addEventListener('click', () => {
+        if (currentPage === 'settings') showPage('profiles');
+        else openSettings();
+    });
     document.getElementById('btn-back-settings').addEventListener('click', () => showPage('profiles'));
     document.getElementById('btn-sync-header').addEventListener('click', openSyncModal);
 
@@ -265,6 +271,12 @@ function bindEvents() {
 
     // Delete
     document.getElementById('btn-delete-confirm').addEventListener('click', handleDeleteConfirm);
+
+    // Edit
+    document.getElementById('btn-edit-confirm').addEventListener('click', handleRename);
+    document.getElementById('edit-name').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleRename();
+    });
 
     // Settings actions
     document.getElementById('btn-copy-mcp').addEventListener('click', handleCopyMCP);
@@ -399,11 +411,44 @@ async function launchProfile(name) {
 }
 
 let deleteTargetName = '';
+let editTargetName = '';
 
 function confirmDelete(name) {
     deleteTargetName = name;
     document.getElementById('delete-profile-name').textContent = name;
     openModal('modal-delete');
+}
+
+function openEditModal(name) {
+    editTargetName = name;
+    document.getElementById('edit-name').value = name;
+    openModal('modal-edit');
+    setTimeout(() => {
+        const input = document.getElementById('edit-name');
+        input.focus();
+        input.select();
+    }, 100);
+}
+
+async function handleRename() {
+    const newName = document.getElementById('edit-name').value.trim();
+    if (!newName || newName === editTargetName) {
+        closeModal('modal-edit');
+        return;
+    }
+
+    showLoading(true);
+    try {
+        await callGo('RenameProfile', editTargetName, newName);
+        closeModal('modal-edit');
+        showToast(`Renamed "${editTargetName}" → "${newName}"`, 'success');
+        lastProfileHash = ''; // Force refresh
+        editTargetName = '';
+        await loadProfiles();
+    } catch (err) {
+        showToast(err, 'error');
+    }
+    showLoading(false);
 }
 
 async function handleDeleteConfirm() {
