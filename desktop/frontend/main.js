@@ -8,6 +8,194 @@ let browsers = [];
 let refreshInterval = null;
 let currentPage = 'profiles'; // 'profiles' | 'settings'
 let lastProfileHash = '';
+let currentLang = localStorage.getItem('bpm-lang') || 'en';
+let currentTheme = localStorage.getItem('bpm-theme') || 'dark';
+
+// ============================================
+// Internationalization (i18n)
+// ============================================
+
+const i18n = {
+    en: {
+        // Header
+        'import': 'Import',
+        'create_profile': 'Create Profile',
+        // Profile list
+        'browser_profiles': 'Browser Profiles',
+        'manage_desc': 'Manage and isolate your development environments.',
+        'filter_profiles': 'Filter profiles...',
+        'sync': 'Sync',
+        'launch': 'Launch',
+        'locked': 'Locked',
+        'free': 'Free',
+        // Empty state
+        'no_profiles': 'No profiles yet',
+        'no_profiles_desc': 'Create your first isolated browser profile to get started.',
+        // Settings
+        'back': 'Back',
+        'settings': 'Settings',
+        'general': 'General',
+        'default_browser': 'Default Browser',
+        'profile_storage': 'Profile storage path',
+        'mcp_server': 'MCP Server',
+        'mcp_hint': "ℹ️ Add this to your AI IDE's MCP config (Claude Code, Cursor, etc.)",
+        'data': 'Data',
+        'export_all': 'Export all profiles',
+        'reset_settings': 'Reset all settings',
+        // Create modal
+        'profile_name': 'Profile Name',
+        'profile_name_hint': 'Lowercase, 3-64 chars, letters/numbers/hyphens',
+        'browser': 'Browser',
+        'create_info': 'Settings like WebGL, Fingerprinting, and Canvas protection will be automatically optimized for the selected browser.',
+        'cancel': 'Cancel',
+        'create': 'Create',
+        // Sync modal
+        'sync_credentials': 'Sync credentials',
+        'sync_desc': 'Transfer session data between environments.',
+        'from': 'From:',
+        'to': 'To:',
+        'cookies_only': 'Cookies only',
+        'cookies_logins': 'Cookies + Logins',
+        'sync_warning': 'Target profile will be backed up first',
+        // Import modal
+        'import_chrome': 'Import Chrome Profile',
+        'import_desc': 'Import an existing Chromium profile directory into bpm as a managed profile.',
+        'profile_directory': 'Profile Directory',
+        'browse': 'Browse',
+        // Credentials modal
+        'credentials': 'Credentials',
+        'sync_creds': 'Sync Creds',
+        'cookies': 'Cookies',
+        'logins': 'Logins',
+        'domain': 'Domain',
+        'no_creds': 'No credentials found in this profile.',
+        'close': 'Close',
+        // Delete modal
+        'delete_profile': 'Delete Profile',
+        'delete_confirm': 'Are you sure you want to delete',
+        'delete_warning': 'This will permanently remove the profile and all its data.',
+        'delete': 'Delete',
+        // Edit modal
+        'edit_profile': 'Edit Profile',
+        'edit_name_hint': 'Lowercase, letters/numbers/hyphens/underscores',
+        'data_directory': 'Data Directory',
+        'save': 'Save',
+        // Status bar
+        'profiles_count': 'Profiles',
+        'browsers_label': 'Browsers',
+        // Toasts
+        'theme_dark': 'Dark mode activated',
+        'theme_light': 'Light mode activated',
+        'lang_changed': 'Language changed to English',
+        'default_browser_updated': 'Default browser updated',
+        'profile_created': 'Profile "{name}" created',
+        'profile_deleted': 'Profile "{name}" deleted',
+        'profile_renamed': 'Renamed "{old}" → "{new}"',
+        'launched': 'Launched browser for "{name}"',
+        'mcp_copied': 'MCP config copied to clipboard',
+        'settings_reset': 'Settings reset',
+        'need_2_profiles': 'Need at least 2 profiles to sync',
+        'enter_name': 'Please enter a profile name',
+        'select_dir': 'Please select a directory',
+        'src_dst_diff': 'Source and target must be different',
+        'imported': 'Imported profile "{name}"',
+        'copy_failed': 'Failed to copy',
+        'dark_only': 'Dark mode is the only theme',
+    },
+    vi: {
+        // Header
+        'import': 'Nhập',
+        'create_profile': 'Tạo Profile',
+        // Profile list
+        'browser_profiles': 'Browser Profiles',
+        'manage_desc': 'Quản lý và cách ly các môi trường phát triển.',
+        'filter_profiles': 'Lọc profiles...',
+        'sync': 'Đồng bộ',
+        'launch': 'Mở',
+        'locked': 'Đã khóa',
+        'free': 'Sẵn sàng',
+        // Empty state
+        'no_profiles': 'Chưa có profile',
+        'no_profiles_desc': 'Tạo profile trình duyệt cách ly đầu tiên để bắt đầu.',
+        // Settings
+        'back': 'Quay lại',
+        'settings': 'Cài đặt',
+        'general': 'Chung',
+        'default_browser': 'Trình duyệt mặc định',
+        'profile_storage': 'Đường dẫn lưu profile',
+        'mcp_server': 'MCP Server',
+        'mcp_hint': 'ℹ️ Thêm cấu hình này vào AI IDE (Claude Code, Cursor, v.v.)',
+        'data': 'Dữ liệu',
+        'export_all': 'Xuất tất cả profiles',
+        'reset_settings': 'Đặt lại cài đặt',
+        // Create modal
+        'profile_name': 'Tên Profile',
+        'profile_name_hint': 'Chữ thường, 3-64 ký tự, chữ cái/số/gạch ngang',
+        'browser': 'Trình duyệt',
+        'create_info': 'Các thiết lập WebGL, Fingerprinting, và Canvas sẽ được tối ưu tự động cho trình duyệt đã chọn.',
+        'cancel': 'Hủy',
+        'create': 'Tạo',
+        // Sync modal
+        'sync_credentials': 'Đồng bộ thông tin',
+        'sync_desc': 'Chuyển dữ liệu phiên giữa các môi trường.',
+        'from': 'Từ:',
+        'to': 'Đến:',
+        'cookies_only': 'Chỉ Cookies',
+        'cookies_logins': 'Cookies + Đăng nhập',
+        'sync_warning': 'Profile đích sẽ được sao lưu trước',
+        // Import modal
+        'import_chrome': 'Nhập Chrome Profile',
+        'import_desc': 'Nhập thư mục profile Chromium hiện có vào bpm.',
+        'profile_directory': 'Thư mục Profile',
+        'browse': 'Chọn',
+        // Credentials modal
+        'credentials': 'Thông tin đăng nhập',
+        'sync_creds': 'Đồng bộ',
+        'cookies': 'Cookies',
+        'logins': 'Đăng nhập',
+        'domain': 'Tên miền',
+        'no_creds': 'Không tìm thấy thông tin đăng nhập trong profile này.',
+        'close': 'Đóng',
+        // Delete modal
+        'delete_profile': 'Xóa Profile',
+        'delete_confirm': 'Bạn có chắc muốn xóa',
+        'delete_warning': 'Hành động này sẽ xóa vĩnh viễn profile và toàn bộ dữ liệu.',
+        'delete': 'Xóa',
+        // Edit modal
+        'edit_profile': 'Sửa Profile',
+        'edit_name_hint': 'Chữ thường, chữ cái/số/gạch ngang/gạch dưới',
+        'data_directory': 'Thư mục dữ liệu',
+        'save': 'Lưu',
+        // Status bar
+        'profiles_count': 'Profiles',
+        'browsers_label': 'Trình duyệt',
+        // Toasts
+        'theme_dark': 'Chế độ tối đã bật',
+        'theme_light': 'Chế độ sáng đã bật',
+        'lang_changed': 'Đã chuyển sang Tiếng Việt',
+        'default_browser_updated': 'Đã cập nhật trình duyệt mặc định',
+        'profile_created': 'Đã tạo profile "{name}"',
+        'profile_deleted': 'Đã xóa profile "{name}"',
+        'profile_renamed': 'Đổi tên "{old}" → "{new}"',
+        'launched': 'Đã mở trình duyệt cho "{name}"',
+        'mcp_copied': 'Đã sao chép cấu hình MCP',
+        'settings_reset': 'Đã đặt lại cài đặt',
+        'need_2_profiles': 'Cần ít nhất 2 profiles để đồng bộ',
+        'enter_name': 'Vui lòng nhập tên profile',
+        'select_dir': 'Vui lòng chọn thư mục',
+        'src_dst_diff': 'Nguồn và đích phải khác nhau',
+        'imported': 'Đã nhập profile "{name}"',
+        'copy_failed': 'Sao chép thất bại',
+    }
+};
+
+function t(key, params = {}) {
+    let text = (i18n[currentLang] && i18n[currentLang][key]) || i18n.en[key] || key;
+    for (const [k, v] of Object.entries(params)) {
+        text = text.replace(`{${k}}`, v);
+    }
+    return text;
+}
 
 // ============================================
 // Initialization
@@ -24,6 +212,9 @@ async function init() {
             await waitForRuntime();
         }
 
+        // Apply saved theme
+        applyTheme(currentTheme);
+
         await loadBrowsers();
         await loadProfiles();
 
@@ -31,6 +222,9 @@ async function init() {
 
         // Render Lucide icons (static ones in header/settings/modals)
         lucide.createIcons();
+
+        // Apply language
+        applyLanguage(currentLang);
 
         bindEvents();
     } catch (err) {
@@ -162,12 +356,12 @@ function renderProfiles() {
 
     list.innerHTML = profiles.map(p => {
         const statusClass = p.locked ? 'locked' : 'free';
-        const statusText = p.locked ? 'Locked' : 'Free';
+        const statusText = p.locked ? t('locked') : t('free');
         const lastUsed = p.last_used ? timeAgo(p.last_used) : 'Never';
         const created = p.created_at ? timeAgo(p.created_at) : '—';
         const matchesSearch = !searchTerm || p.name.toLowerCase().includes(searchTerm);
         const lockInfo = p.locked && p.lock_by
-            ? `<div class="lock-info">LOCKED (PID: ${p.lock_pid})</div>`
+            ? `<div class="lock-info">${t('locked').toUpperCase()} (PID: ${p.lock_pid})</div>`
             : '';
 
         return `
@@ -191,17 +385,17 @@ function renderProfiles() {
                     </span>
                 </div>
                 <div class="profile-actions">
-                    <button class="btn btn-primary btn-sm" onclick="launchProfile('${escapeAttr(p.name)}')" ${p.locked ? 'disabled title="Profile is locked"' : ''}>
+                    <button class="btn btn-primary btn-sm" onclick="launchProfile('${escapeAttr(p.name)}')" ${p.locked ? `disabled title="${t('locked')}"` : ''}>
                         <i data-lucide="play" class="icon-xs"></i>
-                        Launch
+                        ${t('launch')}
                     </button>
-                    <button class="btn-icon" onclick="viewCredentials('${escapeAttr(p.name)}')" title="View credentials">
+                    <button class="btn-icon" onclick="viewCredentials('${escapeAttr(p.name)}')" title="${t('credentials')}">
                         <i data-lucide="eye" class="icon-sm"></i>
                     </button>
-                    <button class="btn-icon" onclick="openEditModal('${escapeAttr(p.name)}')" title="Edit profile">
+                    <button class="btn-icon" onclick="openEditModal('${escapeAttr(p.name)}')" title="${t('edit_profile')}">
                         <i data-lucide="pencil" class="icon-sm"></i>
                     </button>
-                    <button class="btn-icon danger" onclick="confirmDelete('${escapeAttr(p.name)}')" title="Delete profile">
+                    <button class="btn-icon danger" onclick="confirmDelete('${escapeAttr(p.name)}')" title="${t('delete_profile')}">
                         <i data-lucide="trash-2" class="icon-sm"></i>
                     </button>
                 </div>
@@ -251,14 +445,32 @@ function bindEvents() {
     document.getElementById('btn-back-settings').addEventListener('click', () => showPage('profiles'));
     document.getElementById('btn-sync-header').addEventListener('click', openSyncModal);
 
-    // Language toggle (placeholder)
-    document.getElementById('btn-language').addEventListener('click', () => {
-        showToast('Language switching coming soon', 'info');
+    // Language dropdown toggle
+    document.getElementById('btn-language').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const menu = document.getElementById('lang-menu');
+        menu.classList.toggle('open');
     });
 
-    // Theme toggle (visual feedback only)
+    // Language option selection
+    document.querySelectorAll('.lang-option').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const lang = btn.dataset.lang;
+            setLanguage(lang);
+            document.getElementById('lang-menu').classList.remove('open');
+        });
+    });
+
+    // Close lang dropdown on outside click
+    document.addEventListener('click', () => {
+        document.getElementById('lang-menu').classList.remove('open');
+    });
+
+    // Theme toggle
     document.getElementById('btn-theme').addEventListener('click', () => {
-        showToast('Dark mode is the only theme', 'info');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
     });
 
     // Create
@@ -295,7 +507,7 @@ function bindEvents() {
     document.getElementById('settings-browser').addEventListener('change', async (e) => {
         try {
             await callGo('SaveDefaultBrowser', e.target.value);
-            showToast('Default browser updated', 'success');
+            showToast(t('default_browser_updated'), 'success');
         } catch (err) {
             showToast(err, 'error');
         }
@@ -356,7 +568,7 @@ function openImportModal() {
 
 function openSyncModal() {
     if (profiles.length < 2) {
-        showToast('Need at least 2 profiles to sync', 'error');
+        showToast(t('need_2_profiles'), 'error');
         return;
     }
     populateProfileSelect('sync-source', profiles);
@@ -391,7 +603,7 @@ async function handleCreate() {
     const browserVal = document.getElementById('create-browser').value;
 
     if (!name) {
-        showToast('Please enter a profile name', 'error');
+        showToast(t('enter_name'), 'error');
         return;
     }
 
@@ -399,7 +611,7 @@ async function handleCreate() {
     try {
         await callGo('CreateProfile', name, browserVal);
         closeModal('modal-create');
-        showToast(`Profile "${name}" created`, 'success');
+        showToast(t('profile_created', { name }), 'success');
         await loadProfiles();
     } catch (err) {
         showToast(err, 'error');
@@ -411,7 +623,7 @@ async function launchProfile(name) {
     showLoading(true);
     try {
         await callGo('LaunchBrowser', name);
-        showToast(`Launched browser for "${name}"`, 'success');
+        showToast(t('launched', { name }), 'success');
         setTimeout(loadProfiles, 1000);
     } catch (err) {
         showToast(err, 'error');
@@ -455,7 +667,7 @@ async function handleRename() {
     try {
         await callGo('RenameProfile', editTargetName, newName);
         closeModal('modal-edit');
-        showToast(`Renamed "${editTargetName}" → "${newName}"`, 'success');
+        showToast(t('profile_renamed', { old: editTargetName, new: newName }), 'success');
         lastProfileHash = ''; // Force refresh
         editTargetName = '';
         await loadProfiles();
@@ -472,7 +684,7 @@ async function handleDeleteConfirm() {
     try {
         await callGo('DeleteProfile', deleteTargetName, false);
         closeModal('modal-delete');
-        showToast(`Profile "${deleteTargetName}" deleted`, 'success');
+        showToast(t('profile_deleted', { name: deleteTargetName }), 'success');
         deleteTargetName = '';
         await loadProfiles();
     } catch (err) {
@@ -481,7 +693,7 @@ async function handleDeleteConfirm() {
                 try {
                     await callGo('DeleteProfile', deleteTargetName, true);
                     closeModal('modal-delete');
-                    showToast(`Profile "${deleteTargetName}" force deleted`, 'success');
+                    showToast(t('profile_deleted', { name: deleteTargetName }), 'success');
                     deleteTargetName = '';
                     await loadProfiles();
                 } catch (err2) {
@@ -544,7 +756,7 @@ async function handleSync() {
     const dst = document.getElementById('sync-target').value;
 
     if (src === dst) {
-        showToast('Source and target must be different', 'error');
+        showToast(t('src_dst_diff'), 'error');
         return;
     }
 
@@ -575,11 +787,11 @@ async function handleImport() {
     const name = document.getElementById('import-name').value.trim();
 
     if (!srcPath) {
-        showToast('Please select a directory', 'error');
+        showToast(t('select_dir'), 'error');
         return;
     }
     if (!name) {
-        showToast('Please enter a profile name', 'error');
+        showToast(t('enter_name'), 'error');
         return;
     }
 
@@ -587,7 +799,7 @@ async function handleImport() {
     try {
         await callGo('ImportProfile', srcPath, name);
         closeModal('modal-import');
-        showToast(`Imported profile "${name}"`, 'success');
+        showToast(t('imported', { name }), 'success');
         await loadProfiles();
     } catch (err) {
         showToast(err, 'error');
@@ -603,9 +815,9 @@ async function handleCopyMCP() {
     try {
         const code = document.getElementById('mcp-config-code').textContent;
         await navigator.clipboard.writeText(code);
-        showToast('MCP config copied to clipboard', 'success');
+        showToast(t('mcp_copied'), 'success');
     } catch {
-        showToast('Failed to copy', 'error');
+        showToast(t('copy_failed'), 'error');
     }
 }
 
@@ -624,7 +836,7 @@ async function handleResetSettings() {
     if (!confirm('Reset all settings to defaults? This will not delete profiles.')) return;
     try {
         await callGo('SaveDefaultBrowser', '');
-        showToast('Settings reset', 'success');
+        showToast(t('settings_reset'), 'success');
         await openSettings();
     } catch (err) {
         showToast(err, 'error');
@@ -689,4 +901,168 @@ function timeAgo(isoString) {
         if (days < 30) return `${days}d ago`;
         return `${Math.floor(days / 30)}mo ago`;
     } catch { return 'unknown'; }
+}
+
+// ============================================
+// Theme Management
+// ============================================
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    currentTheme = theme;
+}
+
+function setTheme(theme) {
+    applyTheme(theme);
+    localStorage.setItem('bpm-theme', theme);
+    showToast(t(theme === 'dark' ? 'theme_dark' : 'theme_light'), 'info');
+}
+
+// ============================================
+// Language Management
+// ============================================
+
+function setLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('bpm-lang', lang);
+    document.documentElement.setAttribute('lang', lang);
+    applyLanguage(lang);
+    showToast(t('lang_changed'), 'success');
+
+    // Update active state in dropdown
+    document.querySelectorAll('.lang-option').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+
+    // Re-render profiles for translated labels
+    lastProfileHash = '';
+    renderProfiles();
+    lucide.createIcons();
+}
+
+function applyLanguage(lang) {
+    // Static text elements — mapped by data-i18n or known IDs
+    const map = {
+        // Header buttons
+        'btn-import-header': () => setInnerAfterIcon('btn-import-header', t('import')),
+        'btn-create-header': () => setInnerAfterIcon('btn-create-header', t('create_profile')),
+        // Profile section
+        'section-title': () => setText('.section-title', t('browser_profiles')),
+        'section-subtitle': () => setText('.section-subtitle', t('manage_desc')),
+        'search-input': () => { const el = document.getElementById('search-input'); if (el) el.placeholder = t('filter_profiles'); },
+        'btn-sync-header': () => setInnerAfterIcon('btn-sync-header', t('sync')),
+        // Empty state
+        'empty-h3': () => setText('#empty-state h3', t('no_profiles')),
+        'empty-p': () => setText('#empty-state > p', t('no_profiles_desc')),
+        // Settings
+        'btn-back-text': () => setInnerAfterIcon('btn-back-settings', t('back')),
+        'settings-title': () => setText('.settings-page-title', t('settings')),
+        'settings-general': () => setCardTitle(0, t('general')),
+        'settings-browser-label': () => setLabel('settings-browser', t('default_browser')),
+        'settings-storage-label': () => {
+            const labels = document.querySelectorAll('#page-settings .settings-card .form-group label');
+            if (labels[1]) labels[1].textContent = t('profile_storage');
+        },
+        'settings-mcp-title': () => setCardTitle(1, t('mcp_server')),
+        'settings-mcp-hint': () => setText('.settings-hint', t('mcp_hint')),
+        'settings-data-title': () => setCardTitle(2, t('data')),
+        'btn-export-all': () => setInnerAfterIcon('btn-export-all', t('export_all')),
+        'btn-reset-settings': () => setInnerAfterIcon('btn-reset-settings', t('reset_settings')),
+        // Create modal
+        'modal-create-title': () => setText('#modal-create .modal-header h2', t('create_profile')),
+        'create-name-label': () => setLabel('create-name', t('profile_name')),
+        'create-name-hint': () => setText('#modal-create .form-hint', t('profile_name_hint')),
+        'create-browser-label': () => setLabel('create-browser', t('browser')),
+        'create-info': () => setInfoNote('#modal-create', t('create_info')),
+        'btn-create-cancel': () => setText('#modal-create .btn-ghost', t('cancel')),
+        'btn-create-confirm': () => { const el = document.getElementById('btn-create-confirm'); if (el) el.textContent = t('create'); },
+        // Sync modal
+        'modal-sync-title': () => setText('#modal-sync .modal-header h2', t('sync_credentials')),
+        'sync-desc': () => setText('#modal-sync .modal-desc', t('sync_desc')),
+        'sync-from-label': () => setLabel('sync-source', t('from')),
+        'sync-to-label': () => setLabel('sync-target', t('to')),
+        'sync-cancel': () => setText('#modal-sync .btn-ghost', t('cancel')),
+        'btn-sync-confirm': () => { const el = document.getElementById('btn-sync-confirm'); if (el) el.textContent = t('sync'); },
+        // Import modal
+        'modal-import-title': () => setText('#modal-import .modal-header h2', t('import_chrome')),
+        'import-desc': () => setText('#modal-import .modal-desc', t('import_desc')),
+        'import-path-label': () => setLabel('import-path', t('profile_directory')),
+        'btn-browse': () => { const el = document.getElementById('btn-browse'); if (el) el.textContent = t('browse'); },
+        'import-name-label': () => setLabel('import-name', t('profile_name')),
+        'import-cancel': () => setText('#modal-import .btn-ghost', t('cancel')),
+        'btn-import-confirm': () => { const el = document.getElementById('btn-import-confirm'); if (el) el.textContent = t('import'); },
+        // Credentials modal
+        'btn-sync-from-creds': () => { const el = document.getElementById('btn-sync-from-creds'); if (el) el.textContent = t('sync_creds'); },
+        'creds-th': () => {
+            const ths = document.querySelectorAll('.creds-table th');
+            if (ths[0]) ths[0].textContent = t('domain');
+            if (ths[1]) ths[1].textContent = t('cookies');
+            if (ths[2]) ths[2].textContent = t('logins');
+        },
+        'creds-empty': () => setText('#creds-empty p', t('no_creds')),
+        'creds-close': () => setText('#modal-creds .btn-ghost', t('close')),
+        // Delete modal
+        'modal-delete-title': () => setText('#modal-delete .modal-header h2', t('delete_profile')),
+        'delete-warning': () => setText('#modal-delete .text-danger', t('delete_warning')),
+        'delete-cancel': () => setText('#modal-delete .btn-ghost', t('cancel')),
+        'btn-delete-confirm': () => { const el = document.getElementById('btn-delete-confirm'); if (el) el.textContent = t('delete'); },
+        // Edit modal
+        'modal-edit-title': () => setText('#modal-edit .modal-header h2', t('edit_profile')),
+        'edit-name-label': () => setLabel('edit-name', t('profile_name')),
+        'edit-name-hint': () => setText('#modal-edit .form-hint', t('edit_name_hint')),
+        'edit-dir-label': () => {
+            const labels = document.querySelectorAll('#modal-edit .form-group label');
+            if (labels[1]) labels[1].textContent = t('data_directory');
+        },
+        'edit-cancel': () => setText('#modal-edit .btn-ghost', t('cancel')),
+        'btn-edit-confirm': () => { const el = document.getElementById('btn-edit-confirm'); if (el) el.textContent = t('save'); },
+    };
+
+    Object.values(map).forEach(fn => { try { fn(); } catch {} });
+}
+
+// --- i18n helper functions ---
+
+function setText(selector, text) {
+    const el = document.querySelector(selector);
+    if (el) el.textContent = text;
+}
+
+function setLabel(forId, text) {
+    const el = document.querySelector(`label[for="${forId}"]`);
+    if (el) el.textContent = text;
+}
+
+function setInnerAfterIcon(id, text) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    // Preserve the icon <i> or <svg>, replace text
+    const icon = el.querySelector('i, svg');
+    if (icon) {
+        el.textContent = '';
+        el.appendChild(icon);
+        el.append(` ${text}`);
+    } else {
+        el.textContent = text;
+    }
+}
+
+function setCardTitle(index, text) {
+    const titles = document.querySelectorAll('#page-settings .settings-card-title');
+    if (titles[index]) {
+        const icon = titles[index].querySelector('i');
+        titles[index].textContent = '';
+        if (icon) titles[index].appendChild(icon);
+        titles[index].append(`\n                ${text}`);
+    }
+}
+
+function setInfoNote(modalSelector, text) {
+    const note = document.querySelector(`${modalSelector} .modal-info-note`);
+    if (note) {
+        const icon = note.querySelector('i, svg');
+        note.textContent = '';
+        if (icon) note.appendChild(icon);
+        note.append(` ${text}`);
+    }
 }

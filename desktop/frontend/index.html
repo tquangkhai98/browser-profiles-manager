@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,14 +13,42 @@
     <!-- Header — bpm logo left | Language 🌙 Import CreateProfile ⚙ right -->
     <header class="app-header" id="app-header">
         <div class="header-left">
+            <svg class="header-logo-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="logo-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#8083ff"/>
+                        <stop offset="100%" stop-color="#6366F1"/>
+                    </linearGradient>
+                </defs>
+                <rect width="32" height="32" rx="6" fill="url(#logo-grad)"/>
+                <path d="M16 6L8 12v8l8 6 8-6v-8l-8-6z" stroke="white" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+                <path d="M8 12l8 6 8-6" stroke="white" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+                <path d="M16 18v8" stroke="white" stroke-width="1.5" fill="none"/>
+                <path d="M12 9.5l4 3 4-3" stroke="white" stroke-width="1" fill="none" opacity="0.5" stroke-linejoin="round"/>
+            </svg>
             <span class="header-logo">bpm</span>
         </div>
         <div class="header-right">
-            <button class="header-icon-btn" id="btn-language" title="Change language">
-                <i data-lucide="globe" class="icon-sm"></i>
-            </button>
-            <button class="header-icon-btn" id="btn-theme" title="Toggle light/dark mode">
-                <i data-lucide="moon" class="icon-sm"></i>
+            <div class="lang-dropdown" id="lang-dropdown">
+                <button class="header-icon-btn" id="btn-language" title="Change language">
+                    <i data-lucide="globe" class="icon-sm"></i>
+                </button>
+                <div class="lang-dropdown-menu" id="lang-menu">
+                    <button class="lang-option active" data-lang="en">
+                        <span class="lang-flag">🇺🇸</span>
+                        <span class="lang-label">English</span>
+                        <i data-lucide="check" class="icon-xs lang-check"></i>
+                    </button>
+                    <button class="lang-option" data-lang="vi">
+                        <span class="lang-flag">🇻🇳</span>
+                        <span class="lang-label">Tiếng Việt</span>
+                        <i data-lucide="check" class="icon-xs lang-check"></i>
+                    </button>
+                </div>
+            </div>
+            <button class="header-icon-btn theme-toggle" id="btn-theme" title="Toggle light/dark mode">
+                <i data-lucide="sun" class="icon-sm icon-sun"></i>
+                <i data-lucide="moon" class="icon-sm icon-moon"></i>
             </button>
             <button class="btn btn-outline-header" id="btn-import-header"><i data-lucide="download" class="icon-xs"></i> Import</button>
             <button class="btn btn-primary btn-header" id="btn-create-header"><i data-lucide="plus" class="icon-xs"></i> Create Profile</button>

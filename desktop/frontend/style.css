@@ -1,11 +1,11 @@
 /* ============================================
    BPM Desktop — Stitch Design System
    Primary: Indigo #6366F1 | Font: Inter
-   Dark Mode | Corner Radius: 8px
+   Light/Dark Mode | Corner Radius: 8px
    ============================================ */
 
 :root {
-    /* Surface Architecture — Navy Tonal Layering */
+    /* Surface Architecture — Navy Tonal Layering (Dark) */
     --bg-primary: #0b1326;
     --bg-surface: #0b1326;
     --surface-container-lowest: #060d20;
@@ -50,6 +50,10 @@
     --outline: #908fa0;
     --outline-variant: #464554;
 
+    /* Modal */
+    --modal-bg: rgba(45, 52, 73, 0.85);
+    --modal-overlay: rgba(6, 13, 32, 0.6);
+
     /* Radius */
     --radius: 8px;
     --radius-sm: 4px;
@@ -65,6 +69,67 @@
     --transition: 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color-scheme: dark;
+}
+
+/* ============================================
+   Light Mode — Inverted Tonal Layering
+   ============================================ */
+
+[data-theme="light"] {
+    --bg-primary: #f5f6fa;
+    --bg-surface: #f5f6fa;
+    --surface-container-lowest: #ffffff;
+    --surface-container-low: #eeeef6;
+    --surface-container: #e8e8f2;
+    --surface-container-high: #e0e0ec;
+    --surface-container-highest: #d6d6e4;
+    --surface-bright: #ccccd9;
+
+    /* Primary — Indigo (darker for light bg) */
+    --primary: #4f46e5;
+    --primary-container: #6366f1;
+    --primary-raw: #6366F1;
+    --on-primary: #ffffff;
+    --primary-glow: rgba(99, 102, 241, 0.15);
+    --primary-dim: rgba(99, 102, 241, 0.08);
+
+    /* Secondary */
+    --secondary: #4f46e5;
+    --secondary-container: #c7c5f0;
+
+    /* Tertiary */
+    --tertiary: #c2610d;
+    --tertiary-container: #ffdcc5;
+
+    /* Status */
+    --green: #16a34a;
+    --green-glow: rgba(22, 163, 74, 0.2);
+    --green-dim: rgba(22, 163, 74, 0.08);
+    --red: #dc2626;
+    --red-glow: rgba(220, 38, 38, 0.2);
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --error: #dc2626;
+    --error-container: #fecaca;
+    --yellow: #ca8a04;
+    --yellow-dim: rgba(202, 138, 4, 0.08);
+
+    /* Text */
+    --on-surface: #1a1a2e;
+    --on-surface-variant: #454566;
+    --text-muted: #6b6b8a;
+    --outline: #8e8ea8;
+    --outline-variant: #d4d4e0;
+
+    /* Modal */
+    --modal-bg: rgba(250, 250, 255, 0.92);
+    --modal-overlay: rgba(26, 26, 46, 0.3);
+
+    /* Shadows */
+    --shadow-ambient: 0px 20px 40px rgba(100, 100, 140, 0.12);
+    --shadow-sm: 0px 4px 12px rgba(100, 100, 140, 0.1);
+
+    color-scheme: light;
 }
 
 * {
@@ -662,7 +727,7 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(6, 13, 32, 0.6);
+    background: var(--modal-overlay);
     backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
@@ -677,7 +742,7 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
 }
 
 .modal {
-    background: rgba(45, 52, 73, 0.85);
+    background: var(--modal-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-radius: var(--radius-lg);
@@ -1118,4 +1183,132 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--outline);
+}
+
+/* ============================================
+   Theme Toggle Button
+   ============================================ */
+
+.theme-toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.theme-toggle .icon-sun,
+.theme-toggle .icon-moon {
+    transition: all 0.35s var(--ease);
+    position: absolute;
+}
+
+.theme-toggle .icon-sun {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+}
+
+.theme-toggle .icon-moon {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+}
+
+[data-theme="light"] .theme-toggle .icon-sun {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+}
+
+[data-theme="light"] .theme-toggle .icon-moon {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
+}
+
+/* ============================================
+   Language Dropdown
+   ============================================ */
+
+.lang-dropdown {
+    position: relative;
+}
+
+.lang-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 140px;
+    background: var(--modal-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: var(--radius);
+    padding: 4px;
+    box-shadow: var(--shadow-ambient);
+    z-index: 500;
+    animation: slideDown 0.2s var(--ease);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.lang-dropdown-menu.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.lang-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--on-surface-variant);
+    font-family: var(--font);
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.lang-option:hover {
+    background: var(--surface-container-high);
+    color: var(--on-surface);
+}
+
+.lang-option.active {
+    background: var(--primary-dim);
+    color: var(--primary);
+}
+
+.lang-option .lang-flag {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.lang-option .lang-label {
+    flex: 1;
+}
+
+.lang-option .lang-check {
+    opacity: 0;
+    color: var(--primary);
+}
+
+.lang-option.active .lang-check {
+    opacity: 1;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Header logo icon */
+.header-logo-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-sm);
 }
