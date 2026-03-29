@@ -690,6 +690,13 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
     border: 1px solid rgba(70, 69, 84, 0.15);
 }
 
+/* Lucide icon sizing */
+.icon-xxs { width: 12px; height: 12px; }
+.icon-xs  { width: 14px; height: 14px; }
+.icon-sm  { width: 16px; height: 16px; }
+.icon-md  { width: 20px; height: 20px; }
+.icon-empty { width: 48px; height: 48px; color: var(--text-muted); }
+
 .modal-wide {
     width: 600px;
 }

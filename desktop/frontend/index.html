@@ -17,15 +17,15 @@
         </div>
         <div class="header-right">
             <button class="header-icon-btn" id="btn-language" title="Change language">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M2 9h14M9 2c-2 2.5-2 11 0 14M9 2c2 2.5 2 11 0 14" stroke="currentColor" stroke-width="1.5"/></svg>
+                <i data-lucide="globe" class="icon-sm"></i>
             </button>
             <button class="header-icon-btn" id="btn-theme" title="Toggle light/dark mode">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M15.1 10.4A6.5 6.5 0 017.6 2.9a7 7 0 107.5 7.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <i data-lucide="moon" class="icon-sm"></i>
             </button>
-            <button class="btn btn-outline-header" id="btn-import-header">Import</button>
-            <button class="btn btn-primary btn-header" id="btn-create-header">Create Profile</button>
+            <button class="btn btn-outline-header" id="btn-import-header"><i data-lucide="download" class="icon-xs"></i> Import</button>
+            <button class="btn btn-primary btn-header" id="btn-create-header"><i data-lucide="plus" class="icon-xs"></i> Create Profile</button>
             <button class="header-icon-btn" id="btn-settings" title="Settings">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M14.7 11.1a1.2 1.2 0 00.24 1.32l.04.04a1.45 1.45 0 11-2.06 2.06l-.04-.04a1.2 1.2 0 00-1.32-.24 1.2 1.2 0 00-.73 1.1v.12a1.45 1.45 0 11-2.9 0v-.06a1.2 1.2 0 00-.79-1.1 1.2 1.2 0 00-1.32.24l-.04.04a1.45 1.45 0 11-2.06-2.06l.04-.04a1.2 1.2 0 00.24-1.32 1.2 1.2 0 00-1.1-.73h-.12a1.45 1.45 0 010-2.9h.06a1.2 1.2 0 001.1-.79 1.2 1.2 0 00-.24-1.32l-.04-.04A1.45 1.45 0 115.48 3.26l.04.04a1.2 1.2 0 001.32.24h.06a1.2 1.2 0 00.73-1.1v-.12a1.45 1.45 0 012.9 0v.06a1.2 1.2 0 00.73 1.1 1.2 1.2 0 001.32-.24l.04-.04a1.45 1.45 0 112.06 2.06l-.04.04a1.2 1.2 0 00-.24 1.32v.06a1.2 1.2 0 001.1.73h.12a1.45 1.45 0 010 2.9h-.06a1.2 1.2 0 00-1.1.73z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <i data-lucide="settings" class="icon-sm"></i>
             </button>
         </div>
     </header>
@@ -40,11 +40,11 @@
             </div>
             <div class="section-actions">
                 <div class="search-box">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <i data-lucide="search" class="icon-xs"></i>
                     <input type="text" id="search-input" placeholder="Filter profiles..." autocomplete="off" spellcheck="false">
                 </div>
                 <button class="btn btn-secondary btn-sm" id="btn-sync-header" title="Sync credentials between profiles">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 5.5l2.5-2.5 2.5 2.5M4.5 3v7.5M14 10.5L11.5 13 9 10.5M11.5 13V5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <i data-lucide="refresh-cw" class="icon-xs"></i>
                     Sync
                 </button>
             </div>
@@ -57,14 +57,11 @@
 
         <!-- Empty state -->
         <div id="empty-state" class="empty-state" style="display:none;">
-            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                <rect x="8" y="12" width="48" height="40" rx="6" stroke="#4a4a5a" stroke-width="2" fill="none"/>
-                <path d="M24 32h16M32 24v16" stroke="#4a4a5a" stroke-width="2" stroke-linecap="round"/>
-            </svg>
+            <i data-lucide="folder-plus" class="icon-empty"></i>
             <h3>No profiles yet</h3>
             <p>Create your first isolated browser profile to get started.</p>
             <button class="btn btn-primary" onclick="openCreateModal()">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <i data-lucide="plus" class="icon-xs"></i>
                 Create Profile
             </button>
         </div>
@@ -74,7 +71,7 @@
     <div id="page-settings" class="page" style="display:none;">
         <div class="settings-back">
             <button class="btn-back" id="btn-back-settings">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <i data-lucide="arrow-left" class="icon-xs"></i>
                 Back
             </button>
             <h2 class="settings-page-title">Settings</h2>
@@ -83,7 +80,7 @@
         <!-- General -->
         <div class="settings-card">
             <div class="settings-card-title">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <i data-lucide="sliders-horizontal" class="icon-sm"></i>
                 General
             </div>
             <div class="form-group">
@@ -93,7 +90,7 @@
             <div class="form-group">
                 <label>Profile storage path</label>
                 <div class="settings-path">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M1 6h14" stroke="currentColor" stroke-width="1.5"/></svg>
+                    <i data-lucide="folder" class="icon-xs"></i>
                     <span id="settings-profiles-dir">~/.local/share/bpm/profiles/</span>
                 </div>
             </div>
@@ -102,13 +99,13 @@
         <!-- MCP Server -->
         <div class="settings-card">
             <div class="settings-card-title">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="1" width="10" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6 5h4M6 8h4M6 11h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <i data-lucide="server" class="icon-sm"></i>
                 MCP Server
             </div>
             <div class="mcp-code-block">
                 <pre id="mcp-config-code"></pre>
                 <button class="btn-copy" id="btn-copy-mcp" title="Copy to clipboard">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M3 11V3a1.5 1.5 0 011.5-1.5H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <i data-lucide="copy" class="icon-xs"></i>
                 </button>
             </div>
             <p class="settings-hint">ℹ️ Add this to your AI IDE's MCP config (Claude Code, Cursor, etc.)</p>
@@ -117,16 +114,16 @@
         <!-- Data -->
         <div class="settings-card">
             <div class="settings-card-title">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 5l6-3 6 3v6l-6 3-6-3V5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/><path d="M2 5l6 3m0 0l6-3M8 8v6" stroke="currentColor" stroke-width="1.5"/></svg>
+                <i data-lucide="database" class="icon-sm"></i>
                 Data
             </div>
             <div class="settings-data-actions">
                 <button class="btn btn-secondary" id="btn-export-all">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <i data-lucide="download" class="icon-xs"></i>
                     Export all profiles
                 </button>
                 <button class="btn btn-danger-outline" id="btn-reset-settings">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 5h10M5 5V3h6v2M6 7v4M10 7v4M4 5l1 8h6l1-8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <i data-lucide="trash-2" class="icon-xs"></i>
                     Reset all settings
                 </button>
             </div>
@@ -139,13 +136,13 @@
     <footer class="status-bar" id="status-bar">
         <div class="status-bar-left">
             <span id="status-profile-count">
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <i data-lucide="layout-grid" class="icon-xxs"></i>
                 0 Profiles
             </span>
         </div>
         <div class="status-bar-right">
             <span id="status-browsers">
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M2 10h12" stroke="currentColor" stroke-width="1.5"/></svg>
+                <i data-lucide="monitor" class="icon-xxs"></i>
                 Browsers: —
             </span>
         </div>
@@ -169,7 +166,7 @@
                     <select id="create-browser"></select>
                 </div>
                 <div class="modal-info-note">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4M8 5.5v0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <i data-lucide="info" class="icon-xs"></i>
                     Settings like WebGL, Fingerprinting, and Canvas protection will be automatically optimized for the selected browser.
                 </div>
             </div>
@@ -313,7 +310,7 @@
                     <div class="path-display">
                         <span id="edit-path" class="path-text"></span>
                         <button class="btn-icon" id="btn-open-profile-dir" title="Open in Finder">
-                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1v-3M10 2h4v4M7 9l7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <i data-lucide="external-link" class="icon-xs"></i>
                         </button>
                     </div>
                 </div>
@@ -331,6 +328,7 @@
         <div class="spinner"></div>
     </div>
 
+    <script src="lucide.min.js"></script>
     <script src="main.js"></script>
 </body>
 </html>

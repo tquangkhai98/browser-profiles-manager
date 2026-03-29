@@ -29,6 +29,9 @@ async function init() {
 
         refreshInterval = setInterval(loadProfiles, 5000);
 
+        // Render Lucide icons (static ones in header/settings/modals)
+        lucide.createIcons();
+
         bindEvents();
     } catch (err) {
         console.error('Init failed:', err);
@@ -179,32 +182,35 @@ function renderProfiles() {
                 ${lockInfo}
                 <div class="profile-meta">
                     <span class="profile-meta-item">
-                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M12 2H4a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2zM5 7h6M5 10h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        <i data-lucide="calendar" class="icon-xxs"></i>
                         ${created}
                     </span>
                     <span class="profile-meta-item">
-                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        <i data-lucide="clock" class="icon-xxs"></i>
                         ${lastUsed}
                     </span>
                 </div>
                 <div class="profile-actions">
                     <button class="btn btn-primary btn-sm" onclick="launchProfile('${escapeAttr(p.name)}')" ${p.locked ? 'disabled title="Profile is locked"' : ''}>
-                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 3l9 5-9 5V3z" fill="currentColor"/></svg>
+                        <i data-lucide="play" class="icon-xs"></i>
                         Launch
                     </button>
                     <button class="btn-icon" onclick="viewCredentials('${escapeAttr(p.name)}')" title="View credentials">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8s2.5-4 6-4 6 4 6 4-2.5 4-6 4-6-4-6-4z" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/></svg>
+                        <i data-lucide="eye" class="icon-sm"></i>
                     </button>
                     <button class="btn-icon" onclick="openEditModal('${escapeAttr(p.name)}')" title="Edit profile">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <i data-lucide="pencil" class="icon-sm"></i>
                     </button>
                     <button class="btn-icon danger" onclick="confirmDelete('${escapeAttr(p.name)}')" title="Delete profile">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 5h10M5 5V3h6v2M6 7v4M10 7v4M4 5l1 8h6l1-8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <i data-lucide="trash-2" class="icon-sm"></i>
                     </button>
                 </div>
             </div>
         `;
     }).join('');
+
+    // Re-render Lucide icons in dynamically created cards
+    lucide.createIcons();
 }
 
 function updateStatusBar() {
