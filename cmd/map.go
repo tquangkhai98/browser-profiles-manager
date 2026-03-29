@@ -58,7 +58,7 @@ func runMapList() error {
 		fmt.Println("No mappings configured. Use: bpm map <dir> <profile>")
 		return nil
 	}
-	fmt.Println("Directory → Profile mappings:\n")
+	fmt.Println("Directory → Profile mappings:")
 	for _, m := range mappings {
 		fmt.Printf("  %s → %s\n", m.Directory, m.Profile)
 	}
