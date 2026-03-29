@@ -16,7 +16,8 @@ var credentialFiles = []string{
 }
 
 // Sync copies credential database files from source to target profile.
-// It copies the files as-is (encrypted data stays encrypted).
+// It copies the files as-is, then encrypts any plaintext passwords
+// so Chrome can read them (Chrome macOS requires v10-encrypted format).
 // Files are always placed in the target's Default/ subdirectory, since Chromium
 // with --user-data-dir reads from <profileDir>/Default/.
 func Sync(srcDir, dstDir string) (int, error) {
@@ -40,6 +41,17 @@ func Sync(srcDir, dstDir string) (int, error) {
 			return copied, fmt.Errorf("cannot copy %s: %w", name, err)
 		}
 		copied++
+	}
+
+	// Encrypt any plaintext passwords in the copied Login Data
+	loginDataPath := filepath.Join(dstDir, "Default", "Login Data")
+	if _, err := os.Stat(loginDataPath); err == nil {
+		n, err := EncryptLoginDB(loginDataPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: cannot encrypt passwords: %v\n", err)
+		} else if n > 0 {
+			fmt.Fprintf(os.Stderr, "Encrypted %d plaintext password(s) for Chrome compatibility\n", n)
+		}
 	}
 
 	return copied, nil
