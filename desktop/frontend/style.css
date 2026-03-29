@@ -891,8 +891,28 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
 .form-hint {
     display: block;
     margin-top: 4px;
-    font-size: 0.625rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
+}
+
+.path-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--surface-container-low);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius);
+}
+
+.path-text {
+    flex: 1;
+    font-size: 0.75rem;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: var(--on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .input-with-btn {

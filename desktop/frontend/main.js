@@ -277,6 +277,9 @@ function bindEvents() {
     document.getElementById('edit-name').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handleRename();
     });
+    document.getElementById('btn-open-profile-dir').addEventListener('click', () => {
+        if (editTargetName) callGo('OpenProfileDir', editTargetName);
+    });
 
     // Settings actions
     document.getElementById('btn-copy-mcp').addEventListener('click', handleCopyMCP);
@@ -422,6 +425,11 @@ function confirmDelete(name) {
 function openEditModal(name) {
     editTargetName = name;
     document.getElementById('edit-name').value = name;
+
+    // Find profile to get dataDir
+    const p = profiles.find(p => p.name === name);
+    document.getElementById('edit-path').textContent = p ? p.data_dir : '';
+
     openModal('modal-edit');
     setTimeout(() => {
         const input = document.getElementById('edit-name');

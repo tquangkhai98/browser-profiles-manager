@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -118,6 +119,15 @@ func (a *App) DeleteProfile(name string, force bool) error {
 // RenameProfile changes a profile's name.
 func (a *App) RenameProfile(oldName, newName string) error {
 	return profile.Rename(oldName, newName)
+}
+
+// OpenProfileDir opens the profile's data directory in the OS file manager.
+func (a *App) OpenProfileDir(name string) error {
+	p, err := profile.Get(name)
+	if err != nil {
+		return err
+	}
+	return exec.Command("open", p.DataDir).Start()
 }
 
 // --- Browser operations ---
