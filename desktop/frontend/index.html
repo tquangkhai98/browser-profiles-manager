@@ -10,52 +10,52 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Header -->
-    <header class="app-header">
+    <!-- Header — bpm logo left | Language 🌙 Import CreateProfile ⚙ right -->
+    <header class="app-header" id="app-header">
         <div class="header-left">
-            <div class="app-logo">
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                    <rect width="28" height="28" rx="8" fill="url(#logo-grad)"/>
-                    <path d="M8 10h12M8 14h8M8 18h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-                    <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#8083ff"/><stop offset="1" stop-color="#6366F1"/></linearGradient></defs>
-                </svg>
-            </div>
-            <div>
-                <h1 class="app-title">BPM</h1>
-                <p class="app-subtitle">Browser Profiles Manager</p>
-            </div>
+            <span class="header-logo">bpm</span>
         </div>
         <div class="header-right">
-            <div id="browser-badges" class="browser-badges"></div>
+            <button class="header-icon-btn" id="btn-language" title="Change language">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M2 9h14M9 2c-2 2.5-2 11 0 14M9 2c2 2.5 2 11 0 14" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
+            <button class="header-icon-btn" id="btn-theme" title="Toggle light/dark mode">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M15.1 10.4A6.5 6.5 0 017.6 2.9a7 7 0 107.5 7.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="btn btn-outline-header" id="btn-import-header">Import</button>
+            <button class="btn btn-primary btn-header" id="btn-create-header">Create Profile</button>
+            <button class="header-icon-btn" id="btn-settings" title="Settings">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M14.7 11.1a1.2 1.2 0 00.24 1.32l.04.04a1.45 1.45 0 11-2.06 2.06l-.04-.04a1.2 1.2 0 00-1.32-.24 1.2 1.2 0 00-.73 1.1v.12a1.45 1.45 0 11-2.9 0v-.06a1.2 1.2 0 00-.79-1.1 1.2 1.2 0 00-1.32.24l-.04.04a1.45 1.45 0 11-2.06-2.06l.04-.04a1.2 1.2 0 00.24-1.32 1.2 1.2 0 00-1.1-.73h-.12a1.45 1.45 0 010-2.9h.06a1.2 1.2 0 001.1-.79 1.2 1.2 0 00-.24-1.32l-.04-.04A1.45 1.45 0 115.48 3.26l.04.04a1.2 1.2 0 001.32.24h.06a1.2 1.2 0 00.73-1.1v-.12a1.45 1.45 0 012.9 0v.06a1.2 1.2 0 00.73 1.1 1.2 1.2 0 001.32-.24l.04-.04a1.45 1.45 0 112.06 2.06l-.04.04a1.2 1.2 0 00-.24 1.32v.06a1.2 1.2 0 001.1.73h.12a1.45 1.45 0 010 2.9h-.06a1.2 1.2 0 00-1.1.73z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
         </div>
     </header>
 
-    <!-- Toolbar -->
-    <div class="toolbar">
-        <div class="toolbar-left">
-            <button class="btn btn-primary" id="btn-create" title="Create new profile">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                Create Profile
-            </button>
-            <button class="btn btn-secondary" id="btn-import" title="Import existing Chrome profile">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Import
-            </button>
-            <button class="btn btn-secondary" id="btn-sync" title="Sync credentials between profiles">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 5l3-3 3 3M5 2v9M14 11l-3 3-3-3M11 14V5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Sync Creds
-            </button>
+    <!-- Page: Profiles (main view) -->
+    <div id="page-profiles" class="page active">
+        <!-- Section header with search -->
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Browser Profiles</h2>
+                <p class="section-subtitle">Manage and isolate your development environments.</p>
+            </div>
+            <div class="section-actions">
+                <div class="search-box">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <input type="text" id="search-input" placeholder="Filter profiles..." autocomplete="off" spellcheck="false">
+                </div>
+                <button class="btn btn-secondary btn-sm" id="btn-sync-header" title="Sync credentials between profiles">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 5.5l2.5-2.5 2.5 2.5M4.5 3v7.5M14 10.5L11.5 13 9 10.5M11.5 13V5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Sync
+                </button>
+            </div>
         </div>
-        <div class="toolbar-right">
-            <span id="profile-count" class="profile-count"></span>
-        </div>
-    </div>
 
-    <!-- Profile List -->
-    <main class="main-content">
-        <div id="profile-list" class="profile-grid">
-            <!-- Profiles rendered by JS -->
+        <!-- Profile Grid — cards layout -->
+        <div class="profile-grid" id="profile-list">
+            <!-- Rendered by JS -->
         </div>
+
+        <!-- Empty state -->
         <div id="empty-state" class="empty-state" style="display:none;">
             <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
                 <rect x="8" y="12" width="48" height="40" rx="6" stroke="#4a4a5a" stroke-width="2" fill="none"/>
@@ -68,24 +68,109 @@
                 Create Profile
             </button>
         </div>
-    </main>
+    </div>
+
+    <!-- Page: Settings -->
+    <div id="page-settings" class="page" style="display:none;">
+        <div class="settings-back">
+            <button class="btn-back" id="btn-back-settings">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Back
+            </button>
+            <h2 class="settings-page-title">Settings</h2>
+        </div>
+
+        <!-- General -->
+        <div class="settings-card">
+            <div class="settings-card-title">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                General
+            </div>
+            <div class="form-group">
+                <label for="settings-browser">Default Browser</label>
+                <select id="settings-browser"></select>
+            </div>
+            <div class="form-group">
+                <label>Profile storage path</label>
+                <div class="settings-path">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M1 6h14" stroke="currentColor" stroke-width="1.5"/></svg>
+                    <span id="settings-profiles-dir">~/.local/share/bpm/profiles/</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MCP Server -->
+        <div class="settings-card">
+            <div class="settings-card-title">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="1" width="10" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6 5h4M6 8h4M6 11h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                MCP Server
+            </div>
+            <div class="mcp-code-block">
+                <pre id="mcp-config-code"></pre>
+                <button class="btn-copy" id="btn-copy-mcp" title="Copy to clipboard">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M3 11V3a1.5 1.5 0 011.5-1.5H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </button>
+            </div>
+            <p class="settings-hint">ℹ️ Add this to your AI IDE's MCP config (Claude Code, Cursor, etc.)</p>
+        </div>
+
+        <!-- Data -->
+        <div class="settings-card">
+            <div class="settings-card-title">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 5l6-3 6 3v6l-6 3-6-3V5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/><path d="M2 5l6 3m0 0l6-3M8 8v6" stroke="currentColor" stroke-width="1.5"/></svg>
+                Data
+            </div>
+            <div class="settings-data-actions">
+                <button class="btn btn-secondary" id="btn-export-all">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Export all profiles
+                </button>
+                <button class="btn btn-danger-outline" id="btn-reset-settings">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 5h10M5 5V3h6v2M6 7v4M10 7v4M4 5l1 8h6l1-8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Reset all settings
+                </button>
+            </div>
+        </div>
+
+        <div class="settings-version" id="settings-version">v1.0.0</div>
+    </div>
+
+    <!-- Bottom Status Bar -->
+    <footer class="status-bar" id="status-bar">
+        <div class="status-bar-left">
+            <span id="status-profile-count">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                0 Profiles
+            </span>
+        </div>
+        <div class="status-bar-right">
+            <span id="status-browsers">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M2 10h12" stroke="currentColor" stroke-width="1.5"/></svg>
+                Browsers: —
+            </span>
+        </div>
+    </footer>
 
     <!-- Create Profile Modal -->
     <div id="modal-create" class="modal-overlay" style="display:none;">
         <div class="modal">
             <div class="modal-header">
                 <h2>Create Profile</h2>
-                <button class="modal-close" onclick="closeModal('modal-create')">&times;</button>
+                <button class="modal-close" onclick="closeModal('modal-create')">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
                     <label for="create-name">Profile Name</label>
-                    <input type="text" id="create-name" placeholder="e.g. work-chrome, personal" autocomplete="off" spellcheck="false">
-                    <small class="form-hint">Alphanumeric, hyphens, underscores only</small>
+                    <input type="text" id="create-name" placeholder="e.g. work-staging" autocomplete="off" spellcheck="false">
+                    <small class="form-hint">Lowercase, 3-64 chars, letters/numbers/hyphens</small>
                 </div>
                 <div class="form-group">
                     <label for="create-browser">Browser</label>
                     <select id="create-browser"></select>
+                </div>
+                <div class="modal-info-note">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4M8 5.5v0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Settings like WebGL, Fingerprinting, and Canvas protection will be automatically optimized for the selected browser.
                 </div>
             </div>
             <div class="modal-footer">
@@ -99,23 +184,32 @@
     <div id="modal-sync" class="modal-overlay" style="display:none;">
         <div class="modal">
             <div class="modal-header">
-                <h2>Sync Credentials</h2>
-                <button class="modal-close" onclick="closeModal('modal-sync')">&times;</button>
+                <h2>Sync credentials</h2>
+                <button class="modal-close" onclick="closeModal('modal-sync')">×</button>
             </div>
             <div class="modal-body">
-                <p class="modal-desc">Copy cookies and login data from one profile to another. Encrypted data stays encrypted.</p>
-                <div class="sync-flow">
-                    <div class="form-group">
-                        <label for="sync-source">Source Profile</label>
-                        <select id="sync-source"></select>
-                    </div>
-                    <div class="sync-arrow">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m0 0l-4-4m4 4l-4 4" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </div>
-                    <div class="form-group">
-                        <label for="sync-target">Target Profile</label>
-                        <select id="sync-target"></select>
-                    </div>
+                <p class="modal-desc">Transfer session data between environments.</p>
+                <div class="form-group">
+                    <label for="sync-source">From:</label>
+                    <select id="sync-source"></select>
+                </div>
+                <div class="form-group">
+                    <label for="sync-target">To:</label>
+                    <select id="sync-target"></select>
+                </div>
+                <div class="sync-options">
+                    <label class="radio-option">
+                        <input type="radio" name="sync-mode" value="cookies" checked>
+                        <span>Cookies only</span>
+                    </label>
+                    <label class="radio-option active">
+                        <input type="radio" name="sync-mode" value="all">
+                        <span>Cookies + Logins</span>
+                    </label>
+                </div>
+                <div class="sync-warning">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1L1 14h14L8 1z" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 6v4M8 12v0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Target profile will be backed up first
                 </div>
             </div>
             <div class="modal-footer">
@@ -130,7 +224,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Import Chrome Profile</h2>
-                <button class="modal-close" onclick="closeModal('modal-import')">&times;</button>
+                <button class="modal-close" onclick="closeModal('modal-import')">×</button>
             </div>
             <div class="modal-body">
                 <p class="modal-desc">Import an existing Chromium profile directory into bpm as a managed profile.</p>
@@ -153,12 +247,15 @@
         </div>
     </div>
 
-    <!-- Credentials Modal -->
+    <!-- Credentials Modal (wide) -->
     <div id="modal-creds" class="modal-overlay" style="display:none;">
         <div class="modal modal-wide">
             <div class="modal-header">
                 <h2 id="creds-title">Credentials</h2>
-                <button class="modal-close" onclick="closeModal('modal-creds')">&times;</button>
+                <div class="modal-header-actions">
+                    <button class="btn btn-primary btn-sm" id="btn-sync-from-creds">Sync Creds</button>
+                    <button class="modal-close" onclick="closeModal('modal-creds')">×</button>
+                </div>
             </div>
             <div class="modal-body">
                 <div id="creds-summary" class="creds-summary"></div>
@@ -185,7 +282,7 @@
         <div class="modal modal-sm">
             <div class="modal-header">
                 <h2>Delete Profile</h2>
-                <button class="modal-close" onclick="closeModal('modal-delete')">&times;</button>
+                <button class="modal-close" onclick="closeModal('modal-delete')">×</button>
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete <strong id="delete-profile-name"></strong>?</p>

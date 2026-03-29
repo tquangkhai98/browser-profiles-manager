@@ -6,33 +6,29 @@
 let profiles = [];
 let browsers = [];
 let refreshInterval = null;
+let currentPage = 'profiles'; // 'profiles' | 'settings'
+let lastProfileHash = '';
 
 // ============================================
 // Initialization
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Wails injects window.go and window.runtime before DOMContentLoaded
-    // But we add a small safety check
     init();
 });
 
 async function init() {
     try {
-        // Ensure Wails runtime is available
         if (!window.go || !window.go.main || !window.go.main.App) {
             console.warn('Wails runtime not ready, retrying...');
             await waitForRuntime();
         }
 
-        // Load initial data
         await loadBrowsers();
         await loadProfiles();
 
-        // Auto-refresh every 5 seconds
         refreshInterval = setInterval(loadProfiles, 5000);
 
-        // Bind button events
         bindEvents();
     } catch (err) {
         console.error('Init failed:', err);
@@ -60,7 +56,6 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Wrapper to call Go methods safely
 function callGo(methodName, ...args) {
     if (!window.go?.main?.App?.[methodName]) {
         return Promise.reject(`Method ${methodName} not available`);
@@ -75,20 +70,72 @@ function callGo(methodName, ...args) {
 async function loadBrowsers() {
     try {
         browsers = await callGo('DetectBrowsers') || [];
-        renderBrowserBadges();
+        updateStatusBar();
     } catch (err) {
         console.error('Failed to detect browsers:', err);
         browsers = [];
-        renderBrowserBadges();
+        updateStatusBar();
     }
 }
 
 async function loadProfiles() {
     try {
-        profiles = await callGo('ListProfiles') || [];
+        const newProfiles = await callGo('ListProfiles') || [];
+        // Only re-render if data actually changed (prevents flicker)
+        const newHash = JSON.stringify(newProfiles);
+        if (newHash === lastProfileHash) return;
+        lastProfileHash = newHash;
+        profiles = newProfiles;
         renderProfiles();
+        updateStatusBar();
     } catch (err) {
         console.error('Failed to load profiles:', err);
+    }
+}
+
+// ============================================
+// Page Navigation
+// ============================================
+
+function showPage(pageName) {
+    currentPage = pageName;
+    document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('active');
+        p.style.display = 'none';
+    });
+    const target = document.getElementById(`page-${pageName}`);
+    if (target) {
+        target.style.display = 'flex';
+        target.classList.add('active');
+    }
+
+    // Show/hide status bar on settings page
+    document.getElementById('status-bar').style.display =
+        pageName === 'settings' ? 'none' : 'flex';
+}
+
+async function openSettings() {
+    showPage('settings');
+    try {
+        const settings = await callGo('GetSettings');
+        if (settings) {
+            document.getElementById('settings-profiles-dir').textContent = settings.profiles_dir;
+            document.getElementById('settings-version').textContent = `v${settings.version}`;
+
+            // Populate browser dropdown with current selection
+            const select = document.getElementById('settings-browser');
+            if (browsers && browsers.length > 0) {
+                select.innerHTML = browsers.map(b =>
+                    `<option value="${escapeAttr(b.id)}" ${b.id === settings.default_browser ? 'selected' : ''}>${escapeHtml(b.name)}</option>`
+                ).join('');
+            }
+        }
+
+        // Load MCP config
+        const mcpConfig = await callGo('GetMCPConfig');
+        document.getElementById('mcp-config-code').textContent = mcpConfig;
+    } catch (err) {
+        console.error('Failed to load settings:', err);
     }
 }
 
@@ -96,44 +143,32 @@ async function loadProfiles() {
 // Rendering
 // ============================================
 
-function renderBrowserBadges() {
-    const container = document.getElementById('browser-badges');
-    if (!browsers || browsers.length === 0) {
-        container.innerHTML = '<span class="browser-badge" style="background:var(--red-dim);color:var(--red)">No browsers found</span>';
-        return;
-    }
-    container.innerHTML = browsers.map(b => `
-        <span class="browser-badge" title="${escapeHtml(b.exe_path || '')}">✓ ${escapeHtml(b.name || 'Unknown')}</span>
-    `).join('');
-}
-
 function renderProfiles() {
     const list = document.getElementById('profile-list');
     const empty = document.getElementById('empty-state');
-    const countEl = document.getElementById('profile-count');
+    const searchTerm = (document.getElementById('search-input')?.value || '').toLowerCase();
 
     if (!profiles || profiles.length === 0) {
         list.style.display = 'none';
         empty.style.display = 'flex';
-        countEl.textContent = '';
         return;
     }
 
     list.style.display = 'grid';
     empty.style.display = 'none';
-    countEl.textContent = `${profiles.length} profile${profiles.length !== 1 ? 's' : ''}`;
 
     list.innerHTML = profiles.map(p => {
         const statusClass = p.locked ? 'locked' : 'free';
         const statusText = p.locked ? 'Locked' : 'Free';
-        const created = formatDate(p.created_at);
         const lastUsed = p.last_used ? timeAgo(p.last_used) : 'Never';
+        const created = p.created_at ? timeAgo(p.created_at) : '—';
+        const matchesSearch = !searchTerm || p.name.toLowerCase().includes(searchTerm);
         const lockInfo = p.locked && p.lock_by
-            ? `<div class="lock-info">🔒 Locked by ${escapeHtml(p.lock_by)} (PID ${p.lock_pid})</div>`
+            ? `<div class="lock-info">LOCKED (PID: ${p.lock_pid})</div>`
             : '';
 
         return `
-            <div class="profile-card" data-name="${escapeHtml(p.name)}">
+            <div class="profile-card ${matchesSearch ? '' : 'filtered-out'}" data-name="${escapeHtml(p.name)}">
                 <div class="profile-card-header">
                     <div class="profile-name-wrap">
                         <span class="status-dot ${statusClass}" title="${statusText}"></span>
@@ -145,11 +180,11 @@ function renderProfiles() {
                 <div class="profile-meta">
                     <span class="profile-meta-item">
                         <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M12 2H4a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2zM5 7h6M5 10h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                        Created ${created}
+                        ${created}
                     </span>
                     <span class="profile-meta-item">
                         <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                        Used ${lastUsed}
+                        ${lastUsed}
                     </span>
                 </div>
                 <div class="profile-actions">
@@ -169,28 +204,88 @@ function renderProfiles() {
     }).join('');
 }
 
+function updateStatusBar() {
+    const countEl = document.getElementById('status-profile-count');
+    const browsersEl = document.getElementById('status-browsers');
+
+    if (countEl) {
+        const count = profiles ? profiles.length : 0;
+        countEl.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            ${count} Profile${count !== 1 ? 's' : ''}
+        `;
+    }
+
+    if (browsersEl) {
+        const names = browsers && browsers.length > 0
+            ? browsers.map(b => b.name).join(', ')
+            : '—';
+        browsersEl.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M2 10h12" stroke="currentColor" stroke-width="1.5"/></svg>
+            Browsers: ${escapeHtml(names)}
+        `;
+    }
+}
+
 // ============================================
 // Event Binding
 // ============================================
 
 function bindEvents() {
-    // Create profile
-    document.getElementById('btn-create').addEventListener('click', openCreateModal);
+    // Header buttons
+    document.getElementById('btn-create-header').addEventListener('click', openCreateModal);
+    document.getElementById('btn-import-header').addEventListener('click', openImportModal);
+    document.getElementById('btn-settings').addEventListener('click', openSettings);
+    document.getElementById('btn-back-settings').addEventListener('click', () => showPage('profiles'));
+    document.getElementById('btn-sync-header').addEventListener('click', openSyncModal);
+
+    // Language toggle (placeholder)
+    document.getElementById('btn-language').addEventListener('click', () => {
+        showToast('Language switching coming soon', 'info');
+    });
+
+    // Theme toggle (visual feedback only)
+    document.getElementById('btn-theme').addEventListener('click', () => {
+        showToast('Dark mode is the only theme', 'info');
+    });
+
+    // Create
     document.getElementById('btn-create-confirm').addEventListener('click', handleCreate);
 
-    // Import profile
-    document.getElementById('btn-import').addEventListener('click', openImportModal);
+    // Import
     document.getElementById('btn-browse').addEventListener('click', handleBrowse);
     document.getElementById('btn-import-confirm').addEventListener('click', handleImport);
 
-    // Sync credentials
-    document.getElementById('btn-sync').addEventListener('click', openSyncModal);
+    // Sync
     document.getElementById('btn-sync-confirm').addEventListener('click', handleSync);
+    document.getElementById('btn-sync-from-creds').addEventListener('click', () => {
+        closeModal('modal-creds');
+        openSyncModal();
+    });
 
-    // Delete confirm
+    // Delete
     document.getElementById('btn-delete-confirm').addEventListener('click', handleDeleteConfirm);
 
-    // Enter key on inputs
+    // Settings actions
+    document.getElementById('btn-copy-mcp').addEventListener('click', handleCopyMCP);
+    document.getElementById('btn-export-all').addEventListener('click', handleExportAll);
+    document.getElementById('btn-reset-settings').addEventListener('click', handleResetSettings);
+
+    document.getElementById('settings-browser').addEventListener('change', async (e) => {
+        try {
+            await callGo('SaveDefaultBrowser', e.target.value);
+            showToast('Default browser updated', 'success');
+        } catch (err) {
+            showToast(err, 'error');
+        }
+    });
+
+    // Search filter
+    document.getElementById('search-input').addEventListener('input', () => {
+        renderProfiles();
+    });
+
+    // Enter key
     document.getElementById('create-name').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handleCreate();
     });
@@ -205,7 +300,7 @@ function bindEvents() {
         });
     });
 
-    // ESC key closes modals
+    // ESC key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
@@ -345,7 +440,7 @@ async function viewCredentials(name) {
     showLoading(true);
     try {
         const result = await callGo('InspectCredentials', name);
-        document.getElementById('creds-title').textContent = `Credentials — ${name}`;
+        document.getElementById('creds-title').textContent = `${name} — Credentials`;
 
         const summary = document.getElementById('creds-summary');
         summary.innerHTML = `
@@ -442,6 +537,42 @@ async function handleImport() {
 }
 
 // ============================================
+// Settings Actions
+// ============================================
+
+async function handleCopyMCP() {
+    try {
+        const code = document.getElementById('mcp-config-code').textContent;
+        await navigator.clipboard.writeText(code);
+        showToast('MCP config copied to clipboard', 'success');
+    } catch {
+        showToast('Failed to copy', 'error');
+    }
+}
+
+async function handleExportAll() {
+    showLoading(true);
+    try {
+        const msg = await callGo('ExportAllProfiles');
+        if (msg) showToast(msg, 'success');
+    } catch (err) {
+        showToast(err, 'error');
+    }
+    showLoading(false);
+}
+
+async function handleResetSettings() {
+    if (!confirm('Reset all settings to defaults? This will not delete profiles.')) return;
+    try {
+        await callGo('SaveDefaultBrowser', '');
+        showToast('Settings reset', 'success');
+        await openSettings();
+    } catch (err) {
+        showToast(err, 'error');
+    }
+}
+
+// ============================================
 // Toast Notifications
 // ============================================
 
@@ -480,14 +611,6 @@ function escapeHtml(text) {
 
 function escapeAttr(text) {
     return String(text).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-}
-
-function formatDate(isoString) {
-    if (!isoString) return '—';
-    try {
-        const d = new Date(isoString);
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    } catch { return '—'; }
 }
 
 function timeAgo(isoString) {

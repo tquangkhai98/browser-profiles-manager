@@ -11,6 +11,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	"github.com/tquangkhai98/browser-profiles-manager/internal/browser"
+	"github.com/tquangkhai98/browser-profiles-manager/internal/config"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/credential"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/profile"
 )
@@ -266,6 +267,81 @@ func (a *App) ImportProfile(srcPath, name string) error {
 	}
 
 	return nil
+}
+
+// --- Settings operations ---
+
+// SettingsInfo holds settings data for the frontend.
+type SettingsInfo struct {
+	DefaultBrowser string `json:"default_browser"`
+	ProfilesDir    string `json:"profiles_dir"`
+	Version        string `json:"version"`
+}
+
+// GetSettings returns current settings.
+func (a *App) GetSettings() (*SettingsInfo, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, err
+	}
+
+	profilesDir, _ := config.ProfilesDir()
+
+	return &SettingsInfo{
+		DefaultBrowser: cfg.DefaultBrowser,
+		ProfilesDir:    profilesDir,
+		Version:        "1.0.0",
+	}, nil
+}
+
+// SaveDefaultBrowser updates the default browser setting.
+func (a *App) SaveDefaultBrowser(browserID string) error {
+	cfg, unlock, err := config.LoadWithLock()
+	if err != nil {
+		return err
+	}
+	defer unlock()
+
+	cfg.DefaultBrowser = browserID
+	return config.SaveWithLock(cfg)
+}
+
+// GetMCPConfig returns the MCP server JSON configuration snippet.
+func (a *App) GetMCPConfig() string {
+	return `{
+  "mcpServers": {
+    "bpm": {
+      "command": "bpm",
+      "args": ["serve"]
+    }
+  }
+}`
+}
+
+// ExportAllProfiles exports all profiles to the selected directory.
+func (a *App) ExportAllProfiles() (string, error) {
+	dir, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Select Export Directory",
+	})
+	if err != nil || dir == "" {
+		return "", err
+	}
+
+	statuses, err := profile.List()
+	if err != nil {
+		return "", err
+	}
+
+	exported := 0
+	for _, s := range statuses {
+		dstPath := filepath.Join(dir, s.Name)
+		if err := copyDir(s.DataDir, dstPath); err != nil {
+			return "", fmt.Errorf("failed to export %q: %w", s.Name, err)
+		}
+		exported++
+	}
+
+	return fmt.Sprintf("Exported %d profiles to %s", exported, dir), nil
 }
 
 // --- Helper functions ---

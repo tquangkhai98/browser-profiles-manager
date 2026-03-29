@@ -1,7 +1,7 @@
 /* ============================================
-   BPM Desktop — "The Kinetic Terminal" Theme
-   Based on Stitch Design System: BPM Terminal
+   BPM Desktop — Stitch Design System
    Primary: Indigo #6366F1 | Font: Inter
+   Dark Mode | Corner Radius: 8px
    ============================================ */
 
 :root {
@@ -21,6 +21,7 @@
     --primary-raw: #6366F1;
     --on-primary: #1000a9;
     --primary-glow: rgba(99, 102, 241, 0.2);
+    --primary-dim: rgba(99, 102, 241, 0.12);
 
     /* Secondary */
     --secondary: #c0c1ff;
@@ -39,6 +40,8 @@
     --red-dim: rgba(239, 68, 68, 0.12);
     --error: #ffb4ab;
     --error-container: #93000a;
+    --yellow: #facc15;
+    --yellow-dim: rgba(250, 204, 21, 0.12);
 
     /* Text */
     --on-surface: #dbe2fd;
@@ -53,11 +56,11 @@
     --radius-lg: 12px;
     --radius-pill: 9999px;
 
-    /* Shadows — Ambient, never pure black */
+    /* Shadows */
     --shadow-ambient: 0px 20px 40px rgba(6, 13, 32, 0.4);
     --shadow-sm: 0px 4px 12px rgba(6, 13, 32, 0.3);
 
-    /* Motion — Snappy cubic-bezier */
+    /* Motion */
     --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
     --transition: 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 
@@ -77,104 +80,300 @@ body {
     line-height: 1.5;
     overflow-x: hidden;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     -webkit-font-smoothing: antialiased;
 }
 
-/* Disable text selection on non-input elements for native feel */
-body *:not(input):not(textarea):not(select) {
+body *:not(input):not(textarea):not(select):not(pre):not(code) {
     user-select: none;
     -webkit-user-select: none;
 }
 
 /* ============================================
-   Header
+   Header — Compact with nav icons
    ============================================ */
 
 .app-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 24px;
+    padding: 10px 20px;
     background: var(--surface-container-low);
-    /* No borders — use tonal layering */
     --wails-draggable: drag;
+    flex-shrink: 0;
 }
 
 .header-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
-.app-logo {
-    display: flex;
-    align-items: center;
-}
-
-.app-title {
+.header-logo {
     font-size: 18px;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     color: var(--primary);
 }
 
-.app-subtitle {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 500;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-}
-
 .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     --wails-draggable: no-drag;
 }
 
-.browser-badges {
-    display: flex;
-    gap: 8px;
-}
-
-.browser-badge {
+.header-center {
     display: flex;
     align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: var(--radius-pill);
-    font-size: 0.6875rem;
-    font-weight: 600;
-    background: var(--green-dim);
-    color: var(--green);
-    transition: transform var(--transition);
+    gap: 4px;
+    --wails-draggable: no-drag;
 }
 
-.browser-badge:hover {
-    transform: scale(1.05);
+.header-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.header-icon-btn:hover {
+    background: var(--surface-container-high);
+    color: var(--on-surface);
+}
+
+.btn-header {
+    padding: 6px 14px;
+    font-size: 0.6875rem;
+}
+
+.btn-outline-header {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    font-family: var(--font);
+    background: transparent;
+    color: var(--on-surface-variant);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.btn-outline-header:hover {
+    background: var(--surface-container-high);
+    color: var(--on-surface);
+    border-color: var(--outline);
 }
 
 /* ============================================
-   Toolbar
+   Pages — View System
    ============================================ */
 
-.toolbar {
+.page {
+    flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 24px;
-    background: var(--surface-container-low);
-    /* Separation via spacing, not borders */
-    margin-bottom: 2px;
+    flex-direction: column;
+    overflow-y: auto;
 }
 
-.toolbar-left {
+.page:not(.active) {
+    display: none !important;
+}
+
+/* ============================================
+   Section Header — Title + Search
+   ============================================ */
+
+.section-header {
     display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 20px 24px 12px;
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--on-surface);
+    letter-spacing: -0.01em;
+}
+
+.section-subtitle {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.section-actions {
+    display: flex;
+    align-items: center;
     gap: 8px;
 }
 
-.profile-count {
-    font-size: 0.75rem;
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--surface-container-high);
+    border-radius: var(--radius);
+    min-width: 200px;
+    transition: all var(--transition);
+}
+
+.search-box:focus-within {
+    background: var(--surface-bright);
+    box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.search-box svg {
     color: var(--text-muted);
-    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.search-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--on-surface);
+    font-family: var(--font);
+    font-size: 0.75rem;
+}
+
+.search-box input::placeholder {
+    color: var(--text-muted);
+}
+
+/* ============================================
+   Profile Grid — Cards Layout (kept!)
+   ============================================ */
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+    padding: 0 24px 24px;
+}
+
+.profile-card {
+    background: var(--surface-container-low);
+    border-radius: var(--radius);
+    padding: 16px;
+    transition: all var(--transition);
+    animation: fadeIn 0.3s var(--ease);
+}
+
+.profile-card.filtered-out {
+    display: none;
+}
+
+.profile-card:hover {
+    background: var(--surface-container);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.profile-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.profile-name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-dot.free {
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green-glow);
+}
+
+.status-dot.locked {
+    background: var(--red);
+    box-shadow: 0 0 6px var(--red-glow);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.5; }
+}
+
+.profile-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--on-surface);
+}
+
+.profile-browser-badge {
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-container-highest);
+    color: var(--primary);
+    text-transform: capitalize;
+    letter-spacing: 0.3px;
+}
+
+.profile-meta {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 12px;
+    font-size: 0.6875rem;
+    color: var(--on-surface-variant);
+}
+
+.profile-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.lock-info {
+    font-size: 0.6875rem;
+    color: var(--error);
+    background: var(--red-dim);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 6px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(70, 69, 84, 0.15);
 }
 
 /* ============================================
@@ -239,6 +438,16 @@ body *:not(input):not(textarea):not(select) {
     filter: brightness(1.1);
 }
 
+.btn-danger-outline {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger-outline:hover {
+    background: var(--red-dim);
+}
+
 .btn-icon {
     padding: 6px;
     background: transparent;
@@ -265,125 +474,6 @@ body *:not(input):not(textarea):not(select) {
 .btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-}
-
-/* ============================================
-   Profile Grid — No-Divider Cards
-   ============================================ */
-
-.main-content {
-    padding: 20px 24px;
-    flex: 1;
-}
-
-.profile-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 12px;
-}
-
-.profile-card {
-    background: var(--surface-container-low);
-    border-radius: var(--radius);
-    padding: 18px;
-    transition: all var(--transition);
-    animation: fadeIn 0.3s var(--ease);
-    /* No borders — tonal layering only */
-}
-
-.profile-card:hover {
-    background: var(--surface-container);
-    box-shadow: var(--shadow-sm);
-    transform: translateY(-1px);
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-.profile-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-}
-
-.profile-name-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* Status LED — 6px with glow */
-.status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.status-dot.free {
-    background: var(--green);
-    box-shadow: 0 0 6px var(--green-glow);
-}
-
-.status-dot.locked {
-    background: var(--red);
-    box-shadow: 0 0 6px var(--red-glow);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50%      { opacity: 0.5; }
-}
-
-.profile-name {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--on-surface);
-}
-
-.profile-browser-badge {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: var(--radius-sm);
-    background: var(--surface-container-highest);
-    color: var(--primary);
-    text-transform: capitalize;
-}
-
-.profile-meta {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 14px;
-    font-size: 0.6875rem;
-    color: var(--on-surface-variant);
-}
-
-.profile-meta-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.lock-info {
-    font-size: 0.6875rem;
-    color: var(--error);
-    background: var(--red-dim);
-    padding: 4px 8px;
-    border-radius: var(--radius-sm);
-    margin-bottom: 12px;
-}
-
-.profile-actions {
-    display: flex;
-    gap: 6px;
-    padding-top: 12px;
-    /* Ghost border — outline-variant at 15% opacity */
-    border-top: 1px solid rgba(70, 69, 84, 0.15);
 }
 
 /* ============================================
@@ -417,6 +507,155 @@ body *:not(input):not(textarea):not(select) {
 }
 
 /* ============================================
+   Bottom Status Bar
+   ============================================ */
+
+.status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 24px;
+    background: var(--surface-container-low);
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.status-bar-left,
+.status-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.status-bar span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* ============================================
+   Settings Page
+   ============================================ */
+
+.settings-back {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+}
+
+.btn-back {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-family: var(--font);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition);
+}
+
+.btn-back:hover {
+    background: var(--primary-dim);
+}
+
+.settings-page-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--on-surface);
+}
+
+.settings-card {
+    background: var(--surface-container-low);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin: 0 24px 12px;
+}
+
+.settings-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 16px;
+}
+
+.settings-path {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--surface-container-highest);
+    border-radius: var(--radius-sm);
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: var(--on-surface-variant);
+}
+
+.mcp-code-block {
+    position: relative;
+    background: var(--surface-container-lowest);
+    border-radius: var(--radius);
+    padding: 16px;
+    font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+    font-size: 0.6875rem;
+    line-height: 1.6;
+    color: var(--primary);
+    overflow-x: auto;
+}
+
+.btn-copy {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--surface-container-high);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    padding: 4px 6px;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.btn-copy:hover {
+    background: var(--surface-bright);
+    color: var(--on-surface);
+}
+
+.settings-hint {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    margin-top: 10px;
+}
+
+.settings-data-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.settings-version {
+    text-align: center;
+    padding: 20px;
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* ============================================
    Modals — Glassmorphism
    ============================================ */
 
@@ -438,7 +677,6 @@ body *:not(input):not(textarea):not(select) {
 }
 
 .modal {
-    /* Glassmorphism — surface-container-highest at 85% opacity + blur */
     background: rgba(45, 52, 73, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -449,7 +687,6 @@ body *:not(input):not(textarea):not(select) {
     overflow: hidden;
     box-shadow: var(--shadow-ambient);
     animation: slideUp 0.25s var(--ease);
-    /* Ghost border */
     border: 1px solid rgba(70, 69, 84, 0.15);
 }
 
@@ -471,7 +708,6 @@ body *:not(input):not(textarea):not(select) {
     align-items: center;
     justify-content: space-between;
     padding: 18px 22px;
-    /* Ghost border for modal sections */
     border-bottom: 1px solid rgba(70, 69, 84, 0.15);
 }
 
@@ -480,6 +716,12 @@ body *:not(input):not(textarea):not(select) {
     font-weight: 700;
     letter-spacing: -0.01em;
     color: var(--on-surface);
+}
+
+.modal-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .modal-close {
@@ -520,8 +762,79 @@ body *:not(input):not(textarea):not(select) {
     border-top: 1px solid rgba(70, 69, 84, 0.15);
 }
 
+/* Info note inside Create modal */
+.modal-info-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--primary-dim);
+    border-radius: var(--radius);
+    font-size: 0.6875rem;
+    color: var(--primary);
+    line-height: 1.5;
+    margin-top: 16px;
+}
+
+.modal-info-note svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
 /* ============================================
-   Form Elements — Ghost Inputs
+   Sync Modal Extras
+   ============================================ */
+
+.sync-options {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    margin-bottom: 12px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--surface-container-highest);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--on-surface-variant);
+    transition: all var(--transition);
+    flex: 1;
+    justify-content: center;
+}
+
+.radio-option:has(input:checked) {
+    background: var(--primary-dim);
+    color: var(--primary);
+    box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.3);
+}
+
+.radio-option input {
+    appearance: none;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.sync-warning {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--yellow-dim);
+    border-radius: var(--radius-sm);
+    font-size: 0.625rem;
+    color: var(--yellow);
+    font-weight: 500;
+}
+
+/* ============================================
+   Form Elements
    ============================================ */
 
 .form-group {
@@ -592,26 +905,6 @@ body *:not(input):not(textarea):not(select) {
 }
 
 /* ============================================
-   Sync Flow
-   ============================================ */
-
-.sync-flow {
-    display: flex;
-    align-items: flex-end;
-    gap: 12px;
-}
-
-.sync-flow .form-group {
-    flex: 1;
-}
-
-.sync-arrow {
-    padding-bottom: 20px;
-    display: flex;
-    align-items: center;
-}
-
-/* ============================================
    Credentials Table
    ============================================ */
 
@@ -675,7 +968,6 @@ body *:not(input):not(textarea):not(select) {
     color: var(--on-surface);
 }
 
-/* No divider lines between rows — use hover background shift */
 .creds-table tr:hover td {
     background: var(--surface-container-low);
 }
@@ -693,7 +985,7 @@ body *:not(input):not(textarea):not(select) {
 
 .toast-container {
     position: fixed;
-    bottom: 20px;
+    bottom: 40px;
     right: 20px;
     z-index: 2000;
     display: flex;
@@ -781,7 +1073,7 @@ body *:not(input):not(textarea):not(select) {
 }
 
 /* ============================================
-   Scrollbar — Subtle
+   Scrollbar
    ============================================ */
 
 ::-webkit-scrollbar {
