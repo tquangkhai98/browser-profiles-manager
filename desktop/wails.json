@@ -1,0 +1,11 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "bpm-desktop",
+  "outputfilename": "bpm-desktop",
+  "frontend:dir": "frontend",
+  "frontend:install": "",
+  "frontend:build": "",
+  "author": {
+    "name": "tquangkhai98"
+  }
+}
