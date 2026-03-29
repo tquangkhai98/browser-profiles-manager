@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/silas98/browser-profiles-manager -maxdepth 2 -type f \\\\\\(-name *.json -o -name Makefile -o -name *.toml -o -name *.yaml -o -name *.yml -o -name .cursorrules -o -name CLAUDE.md \\\\\\))"
+    ]
+  }
+}

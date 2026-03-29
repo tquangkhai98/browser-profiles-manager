@@ -17,6 +17,8 @@ var credentialFiles = []string{
 
 // Sync copies credential database files from source to target profile.
 // It copies the files as-is (encrypted data stays encrypted).
+// Files are always placed in the target's Default/ subdirectory, since Chromium
+// with --user-data-dir reads from <profileDir>/Default/.
 func Sync(srcDir, dstDir string) (int, error) {
 	copied := 0
 
@@ -26,9 +28,8 @@ func Sync(srcDir, dstDir string) (int, error) {
 			continue
 		}
 
-		// Determine destination path matching source structure
-		relPath, _ := filepath.Rel(srcDir, srcPath)
-		dstPath := filepath.Join(dstDir, relPath)
+		// Always write to Default/ in destination — Chromium reads from there
+		dstPath := filepath.Join(dstDir, "Default", name)
 
 		// Ensure destination directory exists
 		if err := os.MkdirAll(filepath.Dir(dstPath), 0700); err != nil {

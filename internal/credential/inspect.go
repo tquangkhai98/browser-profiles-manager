@@ -27,44 +27,45 @@ type InspectResult struct {
 
 // Inspect reads the Chromium cookie and login databases from a profile directory.
 // It only reads domain names and counts — never decrypts values.
+//
+// Chromium uses --user-data-dir=<profileDir> and stores data in <profileDir>/Default/.
+// However, synced credential files may sit at the profile root. This function checks
+// ALL candidate locations and merges the results.
 func Inspect(profileDir, profileName string) (*InspectResult, error) {
 	result := &InspectResult{ProfileName: profileName}
 	siteMap := make(map[string]*SiteCredential)
 
-	// Read cookies database
-	cookieDB := findDBPath(profileDir, "Cookies")
-	if cookieDB != "" {
+	// Read cookies from all candidate locations
+	for _, cookieDB := range findAllDBPaths(profileDir, "Cookies") {
 		cookies, err := readCookieDomains(cookieDB)
 		if err != nil {
-			// Non-fatal: log warning but continue
-			fmt.Fprintf(os.Stderr, "Warning: cannot read cookies DB: %v\n", err)
-		} else {
-			for domain, count := range cookies {
-				if s, ok := siteMap[domain]; ok {
-					s.CookieCount = count
-				} else {
-					siteMap[domain] = &SiteCredential{Domain: domain, CookieCount: count}
-				}
-				result.TotalCookies += count
+			fmt.Fprintf(os.Stderr, "Warning: cannot read cookies DB %s: %v\n", cookieDB, err)
+			continue
+		}
+		for domain, count := range cookies {
+			if s, ok := siteMap[domain]; ok {
+				s.CookieCount += count
+			} else {
+				siteMap[domain] = &SiteCredential{Domain: domain, CookieCount: count}
 			}
+			result.TotalCookies += count
 		}
 	}
 
-	// Read logins database
-	loginDB := findDBPath(profileDir, "Login Data")
-	if loginDB != "" {
+	// Read logins from all candidate locations
+	for _, loginDB := range findAllDBPaths(profileDir, "Login Data") {
 		logins, err := readLoginDomains(loginDB)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: cannot read logins DB: %v\n", err)
-		} else {
-			for domain, count := range logins {
-				if s, ok := siteMap[domain]; ok {
-					s.LoginCount = count
-				} else {
-					siteMap[domain] = &SiteCredential{Domain: domain, LoginCount: count}
-				}
-				result.TotalLogins += count
+			fmt.Fprintf(os.Stderr, "Warning: cannot read logins DB %s: %v\n", loginDB, err)
+			continue
+		}
+		for domain, count := range logins {
+			if s, ok := siteMap[domain]; ok {
+				s.LoginCount += count
+			} else {
+				siteMap[domain] = &SiteCredential{Domain: domain, LoginCount: count}
 			}
+			result.TotalLogins += count
 		}
 	}
 
@@ -79,9 +80,8 @@ func Inspect(profileDir, profileName string) (*InspectResult, error) {
 	return result, nil
 }
 
-// findDBPath looks for a Chromium DB file in common subdirectory patterns.
+// findDBPath looks for a Chromium DB file, preferring Default/ subdirectory.
 func findDBPath(profileDir, dbName string) string {
-	// Chromium stores DBs in Default/ or the profile root
 	candidates := []string{
 		filepath.Join(profileDir, "Default", dbName),
 		filepath.Join(profileDir, dbName),
@@ -92,6 +92,23 @@ func findDBPath(profileDir, dbName string) string {
 		}
 	}
 	return ""
+}
+
+// findAllDBPaths returns ALL existing paths for a Chromium DB file.
+// Chromium stores active data in Default/ but synced files may be at root.
+// This returns both so callers can merge results.
+func findAllDBPaths(profileDir, dbName string) []string {
+	candidates := []string{
+		filepath.Join(profileDir, "Default", dbName),
+		filepath.Join(profileDir, dbName),
+	}
+	var found []string
+	for _, p := range candidates {
+		if _, err := os.Stat(p); err == nil {
+			found = append(found, p)
+		}
+	}
+	return found
 }
 
 func readCookieDomains(dbPath string) (map[string]int, error) {
