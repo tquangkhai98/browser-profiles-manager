@@ -96,6 +96,210 @@ bpm export <name> <path>   Export profile for backup
 bpm serve                  Start MCP server
 ```
 
+## Development
+
+> 📖 Chưa biết Go? Xem [Go Quick Guide](docs/GO_GUIDE.md) — hướng dẫn cơ bản dành cho developer mới.
+
+### Prerequisites
+
+| Tool | Version | Install |
+|------|---------|---------|
+| Go | ≥ 1.25 | `brew install go` |
+| Wails CLI | v2 | `go install github.com/wailsapp/wails/v2/cmd/wails@latest` |
+| Node.js | ≥ 18 | `brew install node` (for desktop frontend) |
+
+### Project Structure
+
+```
+browser-profiles-manager/
+├── main.go                 # CLI entry point
+├── go.mod                  # Go module & dependencies
+├── cmd/                    # CLI commands (Cobra)
+│   ├── root.go             #   Root command setup
+│   ├── create.go           #   bpm create
+│   ├── list.go             #   bpm list
+│   ├── use.go              #   bpm use
+│   ├── serve.go            #   bpm serve (MCP server)
+│   └── ...                 #   Other subcommands
+├── internal/               # Core business logic (private packages)
+│   ├── profile/            #   Profile CRUD
+│   ├── browser/            #   Browser detection & launch
+│   ├── credential/         #   Credential read (SQLite)
+│   ├── mapping/            #   Directory ↔ profile mapping
+│   ├── config/             #   Configuration management
+│   └── mcp/                #   MCP server implementation
+├── desktop/                # Wails desktop app (separate binary)
+│   ├── main.go             #   Desktop entry point
+│   ├── app.go              #   App struct (Go ↔ JS bridge)
+│   ├── wails.json          #   Wails configuration
+│   └── frontend/           #   HTML/CSS/JS frontend
+├── build/                  # Build output
+└── docs/                   # Documentation
+```
+
+### Build & Run
+
+```bash
+# ────────────────────────────────────────────
+# 🔨  Build CLI binary
+# ────────────────────────────────────────────
+go build -o bpm .                   # Build → ./bpm
+go build -o bpm -v .                # Build verbose (show packages)
+
+# ────────────────────────────────────────────
+# ▶️  Run without building
+# ────────────────────────────────────────────
+go run .                            # Run CLI directly
+go run . list                       # Run a specific command
+go run . create test-profile        # Run with arguments
+
+# ────────────────────────────────────────────
+# 🖥️  Desktop App (Wails)
+# ────────────────────────────────────────────
+cd desktop
+wails dev                           # Dev mode with hot-reload
+wails build                         # Production build → build/bin/
+wails build -debug                  # Build with DevTools enabled
+
+# ────────────────────────────────────────────
+# 📦  Install globally
+# ────────────────────────────────────────────
+go install .                        # Install to $GOPATH/bin/bpm
+```
+
+### Debug
+
+```bash
+# ────────────────────────────────────────────
+# 🐛  Debug with Delve (Go debugger)
+# ────────────────────────────────────────────
+
+# Install Delve
+go install github.com/go-delve/delve/cmd/dlv@latest
+
+# Debug CLI
+dlv debug .                         # Start debugger on main.go
+dlv debug . -- list                 # Debug with CLI arguments
+dlv debug . -- create my-profile    # Debug specific command
+
+# Debug with breakpoint
+dlv debug . -- use test             # Then in dlv console:
+                                    #   break cmd/use.go:25
+                                    #   continue
+                                    #   print profileName
+                                    #   next / step / continue
+
+# Debug desktop app
+cd desktop
+dlv debug .                         # Debug Wails app
+
+# ────────────────────────────────────────────
+# 🔍  Build with debug symbols (no optimization)
+# ────────────────────────────────────────────
+go build -gcflags="all=-N -l" -o bpm .    # Full debug info
+```
+
+### Logging & Troubleshooting
+
+```bash
+# ────────────────────────────────────────────
+# 📋  Print debug info in code
+# ────────────────────────────────────────────
+# Use fmt.Printf / fmt.Println for quick debug output:
+#   fmt.Printf("[DEBUG] profile: %+v\n", profile)
+#   fmt.Printf("[DEBUG] err: %v\n", err)
+
+# Use log package for structured logging:
+#   log.Printf("loading config from %s", path)
+#   log.Fatalf("critical error: %v", err)   ← exits program
+
+# ────────────────────────────────────────────
+# 🔎  Verbose run (see what Go does)
+# ────────────────────────────────────────────
+go build -v .                       # Show packages being compiled
+go build -x .                       # Show ALL build commands executed
+go run -race .                      # Run with race condition detector
+
+# ────────────────────────────────────────────
+# 📊  Profile & trace
+# ────────────────────────────────────────────
+go test -cpuprofile cpu.prof -bench .   # CPU profiling
+go tool pprof cpu.prof                  # Analyze profile
+go test -trace trace.out                # Execution trace
+go tool trace trace.out                 # View trace in browser
+```
+
+### Testing
+
+```bash
+# ────────────────────────────────────────────
+# 🧪  Run tests
+# ────────────────────────────────────────────
+go test ./...                       # Run ALL tests in project
+go test ./internal/profile/         # Test specific package
+go test ./internal/profile/ -v      # Verbose (show each test name)
+go test ./internal/profile/ -run TestCreate  # Run specific test
+go test ./... -count=1              # No cache, fresh run
+go test ./... -cover                # Show code coverage %
+go test ./... -coverprofile=coverage.out     # Generate coverage file
+go tool cover -html=coverage.out             # View coverage in browser
+```
+
+### Dependency Management
+
+```bash
+# ────────────────────────────────────────────
+# 📦  Manage Go modules
+# ────────────────────────────────────────────
+go mod tidy                         # Clean unused deps, add missing ones
+go mod download                     # Download all dependencies
+go mod vendor                       # Copy deps to vendor/ folder
+go mod graph                        # Show dependency graph
+go get github.com/some/package      # Add a new dependency
+go get -u ./...                     # Update all dependencies
+go list -m all                      # List all modules
+```
+
+### Clean & Reset
+
+```bash
+# ────────────────────────────────────────────
+# 🧹  Cleanup
+# ────────────────────────────────────────────
+go clean                            # Remove build cache for this package
+go clean -cache                     # Clear entire build cache
+go clean -testcache                 # Clear test result cache
+rm -f bpm                           # Remove built binary
+rm -rf build/                       # Remove build output
+```
+
+### Common Development Workflow
+
+```bash
+# 1. Pull latest & sync deps
+git pull && go mod tidy
+
+# 2. Make changes to code...
+
+# 3. Quick test run
+go run . list
+
+# 4. Run tests
+go test ./...
+
+# 5. Build final binary
+go build -o bpm .
+
+# 6. Test the binary
+./bpm list
+./bpm create my-test
+
+# 7. Commit
+git add . && git commit -m "feat: add new feature"
+```
+
+---
+
 ## Screenshots
 
 <p align="center">
@@ -136,6 +340,7 @@ bpm serve                  Start MCP server
 - [PLAN.md](PLAN.md) — Technical implementation plan
 - [docs/PRD.md](docs/PRD.md) — Product requirements document
 - [docs/STITCH.md](docs/STITCH.md) — Design wireframes (Stitch MCP)
+- [docs/GO_GUIDE.md](docs/GO_GUIDE.md) — Go quick guide for beginners
 
 ## License
 
