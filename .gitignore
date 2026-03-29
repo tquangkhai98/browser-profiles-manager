@@ -1,0 +1,11 @@
+# Binary
+bpm
+bpm.exe
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
