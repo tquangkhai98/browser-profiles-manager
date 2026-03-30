@@ -666,6 +666,33 @@ function bindEvents() {
             });
         });
     });
+
+    // AI Integration: Copy prompt buttons
+    document.querySelectorAll('.ai-prompt-copy').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const card = btn.closest('.ai-prompt-card');
+            const text = card.querySelector('.ai-prompt-text').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                btn.classList.add('copied');
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.setAttribute('data-lucide', 'check');
+                    lucide.createIcons();
+                }
+                showToast(t('mcp_copied'), 'success');
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    if (icon) {
+                        icon.setAttribute('data-lucide', 'copy');
+                        lucide.createIcons();
+                    }
+                }, 2000);
+            }).catch(() => {
+                showToast(t('copy_failed'), 'error');
+            });
+        });
+    });
 }
 
 // ============================================

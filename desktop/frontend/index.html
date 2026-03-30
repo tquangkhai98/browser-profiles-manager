@@ -413,6 +413,93 @@
                 </div>
             </section>
 
+            <!-- Use Cases -->
+            <section class="ai-usecases-section">
+                <h2 class="ai-section-title">Use Cases</h2>
+                <div class="ai-usecases-grid">
+                    <div class="ai-usecase-card">
+                        <div class="ai-usecase-icon">🎓</div>
+                        <h4 class="ai-usecase-title">Multi-Role Testing</h4>
+                        <p class="ai-usecase-desc">Create profiles for Admin, Teacher, Student — login once per role, then let AI test all flows with correct permissions.</p>
+                        <div class="ai-usecase-code">
+                            <code>bpm create lms-admin && bpm create lms-teacher && bpm create lms-student</code>
+                        </div>
+                    </div>
+                    <div class="ai-usecase-card">
+                        <div class="ai-usecase-icon">🔄</div>
+                        <h4 class="ai-usecase-title">CI/CD Pipeline</h4>
+                        <p class="ai-usecase-desc">AI agent runs E2E tests on staging with pre-authenticated profiles. No manual login needed in CI environment.</p>
+                        <div class="ai-usecase-code">
+                            <code>bpm use staging-qa --headless</code>
+                        </div>
+                    </div>
+                    <div class="ai-usecase-card">
+                        <div class="ai-usecase-icon">🕵️</div>
+                        <h4 class="ai-usecase-title">Web Scraping with Auth</h4>
+                        <p class="ai-usecase-desc">Access authenticated dashboards, admin panels, or member-only content without handling complex OAuth flows.</p>
+                        <div class="ai-usecase-code">
+                            <code>bpm use dashboard-monitor</code>
+                        </div>
+                    </div>
+                    <div class="ai-usecase-card">
+                        <div class="ai-usecase-icon">📊</div>
+                        <h4 class="ai-usecase-title">Data Entry Automation</h4>
+                        <p class="ai-usecase-desc">AI fills forms, uploads files, and submits data across multiple platforms using persistent login sessions.</p>
+                        <div class="ai-usecase-code">
+                            <code>bpm use erp-data-entry</code>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Example Prompts -->
+            <section class="ai-prompts-section">
+                <h2 class="ai-section-title">Example Prompts</h2>
+                <p class="ai-prompts-subtitle">Copy these prompts to use with your AI agent after configuring MCP.</p>
+                <div class="ai-prompts-list">
+                    <div class="ai-prompt-card">
+                        <div class="ai-prompt-label">
+                            <span class="ai-prompt-tag">Playwright MCP</span>
+                            <span class="ai-prompt-scenario">E2E Testing</span>
+                        </div>
+                        <p class="ai-prompt-text">Navigate to the admin dashboard, create a new user with role "Teacher", verify the success message appears, then check the user list to confirm the new user is listed.</p>
+                        <button class="btn-copy ai-prompt-copy" title="Copy prompt">
+                            <i data-lucide="copy" class="icon-xs"></i>
+                        </button>
+                    </div>
+                    <div class="ai-prompt-card">
+                        <div class="ai-prompt-label">
+                            <span class="ai-prompt-tag">Playwright MCP</span>
+                            <span class="ai-prompt-scenario">Form Automation</span>
+                        </div>
+                        <p class="ai-prompt-text">Go to Settings → Profile, update the display name to "Test User", change the timezone to UTC+7, upload avatar.png as profile picture, and click Save.</p>
+                        <button class="btn-copy ai-prompt-copy" title="Copy prompt">
+                            <i data-lucide="copy" class="icon-xs"></i>
+                        </button>
+                    </div>
+                    <div class="ai-prompt-card">
+                        <div class="ai-prompt-label">
+                            <span class="ai-prompt-tag tag-dt">DevTools MCP</span>
+                            <span class="ai-prompt-scenario">Debugging</span>
+                        </div>
+                        <p class="ai-prompt-text">Open the Network tab, navigate to /api/users, find any failed requests (4xx/5xx), and show me the request headers and response body for debugging.</p>
+                        <button class="btn-copy ai-prompt-copy" title="Copy prompt">
+                            <i data-lucide="copy" class="icon-xs"></i>
+                        </button>
+                    </div>
+                    <div class="ai-prompt-card">
+                        <div class="ai-prompt-label">
+                            <span class="ai-prompt-tag tag-bu">Browser Use</span>
+                            <span class="ai-prompt-scenario">Natural Language</span>
+                        </div>
+                        <p class="ai-prompt-text">Log into the LMS as teacher, go to "My Courses", open the first course, check how many students are enrolled, and export the student list as CSV.</p>
+                        <button class="btn-copy ai-prompt-copy" title="Copy prompt">
+                            <i data-lucide="copy" class="icon-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
             <!-- Warning Note -->
             <section class="ai-warning-section">
                 <div class="ai-warning-box">
