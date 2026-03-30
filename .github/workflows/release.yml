@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release-macos:
+    name: Build & Release (macOS)
+    runs-on: macos-latest # Apple Silicon (arm64)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for git describe
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Extract version info
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          COMMIT=$(git rev-parse --short HEAD)
+          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "commit=${COMMIT}" >> $GITHUB_OUTPUT
+          echo "date=${DATE}" >> $GITHUB_OUTPUT
+          echo "Building ${VERSION} (${COMMIT}) at ${DATE}"
+
+      - name: Build CLI binary
+        run: |
+          go build \
+            -ldflags "-s -w \
+              -X github.com/tquangkhai98/browser-profiles-manager/cmd.version=${{ steps.version.outputs.version }} \
+              -X github.com/tquangkhai98/browser-profiles-manager/cmd.commit=${{ steps.version.outputs.commit }} \
+              -X github.com/tquangkhai98/browser-profiles-manager/cmd.date=${{ steps.version.outputs.date }}" \
+            -o bpm .
+
+      - name: Build Desktop app
+        working-directory: desktop
+        run: wails build
+
+      - name: Package artifacts
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+
+          # Package CLI binary
+          tar -czf bpm-${VERSION}-darwin-arm64.tar.gz bpm
+
+          # Package Desktop app bundle
+          cd desktop/build/bin
+          zip -r -y ../../../bpm-desktop-${VERSION}-darwin-arm64.zip bpm-desktop.app
+
+      - name: Generate checksums
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          shasum -a 256 bpm-${VERSION}-darwin-arm64.tar.gz bpm-desktop-${VERSION}-darwin-arm64.zip > checksums-${VERSION}-darwin-arm64.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          body: |
+            ## BPM ${{ steps.version.outputs.version }}
+
+            ### Downloads (macOS Apple Silicon)
+
+            | File | Description |
+            |------|-------------|
+            | `bpm-${{ steps.version.outputs.version }}-darwin-arm64.tar.gz` | CLI binary |
+            | `bpm-desktop-${{ steps.version.outputs.version }}-darwin-arm64.zip` | Desktop app (.app bundle) |
+
+            ### Installation
+
+            **CLI:**
+            ```bash
+            tar -xzf bpm-${{ steps.version.outputs.version }}-darwin-arm64.tar.gz
+            sudo mv bpm /usr/local/bin/
+            ```
+
+            **Desktop:**
+            Unzip and drag `bpm-desktop.app` to your Applications folder.
+
+            > ⚠️ On first launch, macOS may block the app. Go to **System Settings → Privacy & Security** and click **Open Anyway**.
+          files: |
+            bpm-${{ steps.version.outputs.version }}-darwin-arm64.tar.gz
+            bpm-desktop-${{ steps.version.outputs.version }}-darwin-arm64.zip
+            checksums-${{ steps.version.outputs.version }}-darwin-arm64.txt
