@@ -9,6 +9,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+.claude/
 
 # Build output (but keep Wails build assets)
 /build/
