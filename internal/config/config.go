@@ -12,8 +12,17 @@ import (
 type Config struct {
 	DefaultBrowser    string    `json:"default_browser"`
 	CustomProfilesDir string    `json:"custom_profiles_dir,omitempty"`
+	MCPEnabled        *bool     `json:"mcp_enabled,omitempty"`
 	Profiles          []Profile `json:"profiles"`
 	Mappings          []Mapping `json:"mappings"`
+}
+
+// IsMCPEnabled returns whether MCP server is enabled. Defaults to true if not set.
+func (c *Config) IsMCPEnabled() bool {
+	if c.MCPEnabled == nil {
+		return true
+	}
+	return *c.MCPEnabled
 }
 
 // Profile represents a single isolated browser profile.

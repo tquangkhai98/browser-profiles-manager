@@ -286,6 +286,84 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
     gap: 8px;
 }
 
+/* MCP Toggle */
+.mcp-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: var(--surface-container-high);
+    border-radius: var(--radius);
+    transition: all var(--transition);
+}
+
+.mcp-toggle.active {
+    background: var(--primary-dim);
+}
+
+.mcp-toggle-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+}
+
+.mcp-toggle.active .mcp-toggle-label {
+    color: var(--primary);
+}
+
+.mcp-toggle.active svg {
+    color: var(--primary);
+}
+
+/* Toggle Switch Component */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--surface-container-highest);
+    border-radius: 9999px;
+    transition: all 0.25s var(--ease);
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    height: 14px;
+    width: 14px;
+    left: 2px;
+    bottom: 2px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: all 0.25s var(--ease);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: var(--primary);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(14px);
+    background: var(--on-primary);
+}
+
 .search-box {
     display: flex;
     align-items: center;

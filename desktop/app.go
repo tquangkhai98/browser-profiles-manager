@@ -394,6 +394,27 @@ func (a *App) OpenConfigDir() error {
 	return exec.Command("open", configDir).Start()
 }
 
+// GetMCPEnabled returns whether MCP server is enabled.
+func (a *App) GetMCPEnabled() bool {
+	cfg, err := config.Load()
+	if err != nil {
+		return true // default enabled
+	}
+	return cfg.IsMCPEnabled()
+}
+
+// SetMCPEnabled toggles the MCP server on/off.
+func (a *App) SetMCPEnabled(enabled bool) error {
+	cfg, unlock, err := config.LoadWithLock()
+	if err != nil {
+		return err
+	}
+	defer unlock()
+
+	cfg.MCPEnabled = &enabled
+	return config.SaveWithLock(cfg)
+}
+
 // GetMCPConfig returns the MCP server JSON configuration snippet.
 // It auto-detects the bpm binary path for accuracy.
 func (a *App) GetMCPConfig() string {

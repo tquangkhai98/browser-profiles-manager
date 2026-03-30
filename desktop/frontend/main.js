@@ -288,6 +288,9 @@ async function init() {
         // Apply language
         applyLanguage(currentLang);
 
+        // Init MCP toggle
+        await initMCPToggle();
+
         bindEvents();
     } catch (err) {
         console.error('Init failed:', err);
@@ -1572,4 +1575,36 @@ async function handleUninstallMCP(ideID) {
     } catch (err) {
         showToast(String(err), 'error');
     }
+}
+
+// ============================================
+// MCP Toggle Switch
+// ============================================
+
+async function initMCPToggle() {
+    const toggle = document.getElementById('mcp-toggle');
+    const checkbox = document.getElementById('mcp-switch');
+    if (!toggle || !checkbox) return;
+
+    try {
+        const enabled = await callGo('GetMCPEnabled');
+        checkbox.checked = enabled;
+        toggle.classList.toggle('active', enabled);
+    } catch (err) {
+        console.error('Failed to get MCP status:', err);
+    }
+
+    checkbox.addEventListener('change', async () => {
+        const enabled = checkbox.checked;
+        toggle.classList.toggle('active', enabled);
+        try {
+            await callGo('SetMCPEnabled', enabled);
+            showToast(enabled ? 'MCP Server enabled' : 'MCP Server disabled', enabled ? 'success' : 'info');
+        } catch (err) {
+            // Revert on error
+            checkbox.checked = !enabled;
+            toggle.classList.toggle('active', !enabled);
+            showToast(String(err), 'error');
+        }
+    });
 }
