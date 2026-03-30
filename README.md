@@ -99,6 +99,102 @@ Add to your AI IDE's MCP config (Claude Code, Cursor, Antigravity):
 
 ---
 
+## AI Agent Integration
+
+bpm profiles work with browser automation MCP servers, letting AI agents control browsers **with persistent login sessions**. Login once manually, then let your AI agent automate with full authentication — no re-login needed.
+
+### Use Case: Multi-Role Testing
+
+```bash
+# Step 1: Create profiles for each role
+bpm create lms-admin
+bpm create lms-teacher
+bpm create lms-student
+
+# Step 2: Login once per profile (manual)
+bpm use lms-admin      # → login as admin
+bpm use lms-teacher    # → login as teacher
+bpm use lms-student    # → login as student
+
+# Step 3: AI agent uses profiles with persistent sessions ✅
+```
+
+### 🥇 Playwright MCP — Best Overall
+
+Stable, official, uses accessibility tree for reliable element interaction.
+
+```json
+{
+  "mcpServers": {
+    "browser-admin": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--user-data-dir", "~/.local/share/bpm/profiles/lms-admin"
+      ]
+    },
+    "browser-teacher": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--user-data-dir", "~/.local/share/bpm/profiles/lms-teacher"
+      ]
+    }
+  }
+}
+```
+
+### 🥈 Chrome DevTools MCP — Debug & Inspect
+
+Connect to a running Chrome instance launched by bpm. Provides DOM inspection, Network monitoring, and Console access.
+
+```bash
+# Launch browser with remote debugging
+bpm use lms-admin --debug-port=9222
+```
+
+```json
+{
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest", "--browserUrl=http://127.0.0.1:9222"]
+    }
+  }
+}
+```
+
+### 🥉 Browser Use MCP — Natural Language
+
+AI-native browser automation — describe actions in plain language instead of CSS selectors.
+
+```json
+{
+  "mcpServers": {
+    "browser-use": {
+      "command": "npx",
+      "args": [
+        "browser-use-mcp@latest",
+        "--user-data-dir", "~/.local/share/bpm/profiles/lms-admin"
+      ]
+    }
+  }
+}
+```
+
+### Comparison
+
+| Tool | Session Persist | AI Control | Best For |
+|------|:-:|:-:|----------|
+| **Playwright MCP** | ✅ | ✅ | E2E testing, form automation |
+| **Chrome DevTools MCP** | ✅ | ✅ | Debugging, network inspection |
+| **Browser Use MCP** | ✅ | ✅ | Natural language automation |
+| bpm CLI only | ✅ | ❌ | Manual testing |
+
+> **⚠️ Important:** Never open the same profile in two browsers simultaneously — bpm uses file locks to prevent profile corruption.
+
+---
+
 ## CLI Commands
 
 ```
