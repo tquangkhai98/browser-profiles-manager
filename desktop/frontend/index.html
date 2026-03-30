@@ -522,95 +522,67 @@
         </div>
     </div>
 
-    <!-- Page: About -->
-    <div id="page-about" class="page" style="display:none;">
-        <div class="settings-back">
-            <button class="btn-back" id="btn-back-about">
-                <i data-lucide="arrow-left" class="icon-xs"></i>
-                Back
+    <!-- Modal: About -->
+    <div class="modal-overlay" id="modal-about" style="display:none;">
+        <div class="modal about-modal">
+            <button class="modal-close" id="btn-close-about">
+                <i data-lucide="x" class="icon-sm"></i>
             </button>
-        </div>
-        <div class="about-page-scroll">
-            <!-- App Identity -->
-            <section class="about-hero">
-                <img src="appicon.png" alt="BPM" class="about-app-icon" />
-                <h1 class="about-app-name">Browser Profiles Manager</h1>
-                <p class="about-version" id="about-page-version">v1.0.0</p>
-                <p class="about-tagline">Manage isolated Chromium browser profiles for AI-powered automation</p>
-            </section>
-
-            <!-- Author Card -->
-            <section class="about-section">
-                <h2 class="about-section-title">Author</h2>
-                <div class="about-author-card">
-                    <div class="about-avatar">
-                        <img src="https://github.com/tquangkhai98.png?size=80" alt="Khai Tran" class="about-avatar-img" />
-                    </div>
-                    <div class="about-author-info">
-                        <h3 class="about-author-name">Khai Tran</h3>
-                        <p class="about-author-handle">@tquangkhai98</p>
-                        <p class="about-author-email">tquangkhai98@gmail.com</p>
-                    </div>
-                    <a href="https://github.com/tquangkhai98" class="about-link-btn" id="about-github-profile" title="GitHub Profile">
-                        <i data-lucide="github" class="icon-sm"></i>
-                    </a>
+            <div class="about-modal-scroll">
+                <div class="about-hero">
+                    <img src="appicon_clean.png" alt="BPM" class="about-app-icon" />
+                    <h1 class="about-app-name">Browser Profiles Manager</h1>
+                    <p class="about-version" id="about-page-version">v1.0.0</p>
+                    <p class="about-tagline">Manage isolated Chromium browser profiles for AI-powered automation</p>
                 </div>
-            </section>
-
-            <!-- Repository Card -->
-            <section class="about-section">
-                <h2 class="about-section-title">Repository</h2>
-                <div class="about-repo-card" id="about-repo-card">
-                    <div class="about-repo-info">
-                        <div class="about-repo-name">
-                            <i data-lucide="git-branch" class="icon-xs"></i>
-                            <span>tquangkhai98/browser-profiles-manager</span>
+                <div class="about-section">
+                    <h2 class="about-section-title">Author</h2>
+                    <div class="about-author-card">
+                        <div class="about-avatar">
+                            <img src="https://github.com/tquangkhai98.png?size=80" alt="Khai Tran" class="about-avatar-img" />
                         </div>
-                        <p class="about-repo-desc">CLI + MCP server + desktop app for managing isolated Chromium browser profiles across AI IDEs</p>
-                    </div>
-                    <a href="https://github.com/tquangkhai98/browser-profiles-manager" class="about-repo-btn" id="about-repo-link">
-                        <i data-lucide="external-link" class="icon-xs"></i>
-                        Open on GitHub
-                    </a>
-                </div>
-            </section>
-
-            <!-- Tech Stack -->
-            <section class="about-section">
-                <h2 class="about-section-title">Tech Stack</h2>
-                <div class="about-tech-grid">
-                    <div class="about-tech-badge">
-                        <span class="about-tech-icon">🐹</span>
-                        <span>Go</span>
-                    </div>
-                    <div class="about-tech-badge">
-                        <span class="about-tech-icon">🖥️</span>
-                        <span>Wails v2</span>
-                    </div>
-                    <div class="about-tech-badge">
-                        <span class="about-tech-icon">🔌</span>
-                        <span>MCP Server</span>
-                    </div>
-                    <div class="about-tech-badge">
-                        <span class="about-tech-icon">🌐</span>
-                        <span>Chromium</span>
-                    </div>
-                    <div class="about-tech-badge">
-                        <span class="about-tech-icon">⚡</span>
-                        <span>Vanilla JS</span>
-                    </div>
-                    <div class="about-tech-badge">
-                        <span class="about-tech-icon">🔒</span>
-                        <span>File Locking</span>
+                        <div class="about-author-info">
+                            <h3 class="about-author-name">Khai Tran</h3>
+                            <p class="about-author-handle">@tquangkhai98</p>
+                            <p class="about-author-email">tquangkhai98@gmail.com</p>
+                        </div>
+                        <a href="https://github.com/tquangkhai98" class="about-link-btn" id="about-github-profile" title="GitHub Profile">
+                            <i data-lucide="github" class="icon-sm"></i>
+                        </a>
                     </div>
                 </div>
-            </section>
-
-            <!-- License -->
-            <section class="about-section about-footer">
-                <p class="about-license">MIT License · © 2026 Khai Tran</p>
-                <p class="about-built">Built with ❤️ for the AI agent ecosystem</p>
-            </section>
+                <div class="about-section">
+                    <h2 class="about-section-title">Repository</h2>
+                    <div class="about-repo-card" id="about-repo-card">
+                        <div class="about-repo-info">
+                            <div class="about-repo-name">
+                                <i data-lucide="git-branch" class="icon-xs"></i>
+                                <span>tquangkhai98/browser-profiles-manager</span>
+                            </div>
+                            <p class="about-repo-desc">CLI + MCP server + desktop app for managing isolated Chromium browser profiles across AI IDEs</p>
+                        </div>
+                        <a href="https://github.com/tquangkhai98/browser-profiles-manager" class="about-repo-btn" id="about-repo-link">
+                            <i data-lucide="external-link" class="icon-xs"></i>
+                            Open on GitHub
+                        </a>
+                    </div>
+                </div>
+                <div class="about-section">
+                    <h2 class="about-section-title">Tech Stack</h2>
+                    <div class="about-tech-grid">
+                        <div class="about-tech-badge"><span class="about-tech-icon">🐹</span><span>Go</span></div>
+                        <div class="about-tech-badge"><span class="about-tech-icon">🖥️</span><span>Wails v2</span></div>
+                        <div class="about-tech-badge"><span class="about-tech-icon">🔌</span><span>MCP Server</span></div>
+                        <div class="about-tech-badge"><span class="about-tech-icon">🌐</span><span>Chromium</span></div>
+                        <div class="about-tech-badge"><span class="about-tech-icon">⚡</span><span>Vanilla JS</span></div>
+                        <div class="about-tech-badge"><span class="about-tech-icon">🔒</span><span>File Locking</span></div>
+                    </div>
+                </div>
+                <div class="about-section about-footer">
+                    <p class="about-license">MIT License · © 2026 Khai Tran</p>
+                    <p class="about-built">Built with ❤️ for the AI agent ecosystem</p>
+                </div>
+            </div>
         </div>
     </div>
 

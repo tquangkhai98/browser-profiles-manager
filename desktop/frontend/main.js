@@ -6,7 +6,7 @@
 let profiles = [];
 let browsers = [];
 let refreshInterval = null;
-let currentPage = 'profiles'; // 'profiles' | 'settings' | 'ai' | 'about'
+let currentPage = 'profiles'; // 'profiles' | 'settings' | 'ai'
 let lastProfileHash = '';
 let currentLang = localStorage.getItem('bpm-lang') || 'en';
 let currentTheme = localStorage.getItem('bpm-theme') || 'dark';
@@ -377,7 +377,7 @@ function showPage(pageName) {
     if (aiBtn) aiBtn.classList.toggle('active', pageName === 'ai');
 
     // Re-render Lucide icons for dynamic pages
-    if (pageName === 'ai' || pageName === 'about') lucide.createIcons();
+    if (pageName === 'ai') lucide.createIcons();
 }
 
 async function openSettings() {
@@ -443,7 +443,7 @@ function renderProfiles() {
     list.style.display = 'grid';
     empty.style.display = 'none';
 
-    list.innerHTML = profiles.map(p => {
+    list.innerHTML = profiles.map((p, index) => {
         const statusClass = p.locked ? 'locked' : 'free';
         const statusText = p.locked ? t('locked') : t('free');
         const lastUsed = p.last_used ? timeAgo(p.last_used) : 'Never';
@@ -454,7 +454,14 @@ function renderProfiles() {
             : '';
 
         return `
-            <div class="profile-card ${matchesSearch ? '' : 'filtered-out'}" data-name="${escapeHtml(p.name)}">
+            <div class="profile-card ${matchesSearch ? '' : 'filtered-out'}" data-name="${escapeHtml(p.name)}" data-index="${index}" draggable="false">
+                <button class="drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <circle cx="9" cy="5" r="1"/><circle cx="15" cy="5" r="1"/>
+                        <circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/>
+                        <circle cx="9" cy="19" r="1"/><circle cx="15" cy="19" r="1"/>
+                    </svg>
+                </button>
                 <div class="profile-card-header">
                     <div class="profile-name-wrap">
                         <span class="status-dot ${statusClass}" title="${statusText}"></span>
@@ -494,6 +501,150 @@ function renderProfiles() {
 
     // Re-render Lucide icons in dynamically created cards
     lucide.createIcons();
+
+    // Bind drag-and-drop events to new cards
+    bindDragAndDrop();
+}
+
+// ============================================
+// Drag & Drop Reordering (dnd-kit inspired)
+// ============================================
+
+let dragState = {
+    dragging: null,     // DOM element being dragged
+    dragName: null,     // profile name of dragged card
+    overCard: null,     // DOM element being hovered over
+};
+
+function bindDragAndDrop() {
+    const cards = document.querySelectorAll('.profile-card');
+
+    cards.forEach(card => {
+        const handle = card.querySelector('.drag-handle');
+        if (!handle) return;
+
+        // Only initiate drag from the handle
+        handle.addEventListener('mousedown', () => {
+            card.setAttribute('draggable', 'true');
+        });
+
+        // Reset draggable when mouse is released outside a drag
+        handle.addEventListener('mouseup', () => {
+            card.setAttribute('draggable', 'false');
+        });
+
+        card.addEventListener('dragstart', onDragStart);
+        card.addEventListener('dragend', onDragEnd);
+        card.addEventListener('dragover', onDragOver);
+        card.addEventListener('dragenter', onDragEnter);
+        card.addEventListener('dragleave', onDragLeave);
+        card.addEventListener('drop', onDrop);
+    });
+}
+
+function onDragStart(e) {
+    const card = e.target.closest('.profile-card');
+    if (!card) return;
+
+    dragState.dragging = card;
+    dragState.dragName = card.dataset.name;
+
+    // Set drag data
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', card.dataset.name);
+
+    // Delay adding class so the ghost image captures the normal state
+    requestAnimationFrame(() => {
+        card.classList.add('dragging');
+    });
+}
+
+function onDragEnd(e) {
+    const card = e.target.closest('.profile-card');
+    if (card) {
+        card.classList.remove('dragging');
+        card.setAttribute('draggable', 'false');
+    }
+
+    // Clean up all drag-over states
+    document.querySelectorAll('.profile-card.drag-over').forEach(el => {
+        el.classList.remove('drag-over');
+    });
+
+    dragState.dragging = null;
+    dragState.dragName = null;
+    dragState.overCard = null;
+}
+
+function onDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function onDragEnter(e) {
+    e.preventDefault();
+    const card = e.target.closest('.profile-card');
+    if (!card || card === dragState.dragging) return;
+
+    // Remove drag-over from previous target
+    if (dragState.overCard && dragState.overCard !== card) {
+        dragState.overCard.classList.remove('drag-over');
+    }
+
+    card.classList.add('drag-over');
+    dragState.overCard = card;
+}
+
+function onDragLeave(e) {
+    const card = e.target.closest('.profile-card');
+    if (!card) return;
+
+    // Only remove if we're actually leaving the card (not entering a child)
+    const relatedTarget = e.relatedTarget;
+    if (relatedTarget && card.contains(relatedTarget)) return;
+
+    card.classList.remove('drag-over');
+    if (dragState.overCard === card) {
+        dragState.overCard = null;
+    }
+}
+
+function onDrop(e) {
+    e.preventDefault();
+    const targetCard = e.target.closest('.profile-card');
+    if (!targetCard || !dragState.dragging || targetCard === dragState.dragging) return;
+
+    const fromName = dragState.dragName;
+    const toName = targetCard.dataset.name;
+
+    if (!fromName || !toName || fromName === toName) return;
+
+    // Swap positions in local profiles array
+    const fromIdx = profiles.findIndex(p => p.name === fromName);
+    const toIdx = profiles.findIndex(p => p.name === toName);
+
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    // Move profile from fromIdx to toIdx (insert, not swap)
+    const [moved] = profiles.splice(fromIdx, 1);
+    profiles.splice(toIdx, 0, moved);
+
+    // Re-render immediately for visual feedback
+    lastProfileHash = JSON.stringify(profiles);
+    renderProfiles();
+
+    // Persist new order to backend
+    saveProfileOrder();
+}
+
+async function saveProfileOrder() {
+    try {
+        const names = profiles.map(p => p.name);
+        await callGo('ReorderProfiles', names);
+    } catch (err) {
+        console.error('Failed to save profile order:', err);
+        showToast('Failed to save order', 'error');
+    }
 }
 
 function updateStatusBar() {
@@ -537,11 +688,21 @@ function bindEvents() {
     });
     document.getElementById('btn-back-settings').addEventListener('click', () => showPage('profiles'));
     document.getElementById('btn-back-ai').addEventListener('click', () => showPage('profiles'));
-    document.getElementById('btn-back-about').addEventListener('click', () => showPage('profiles'));
-    document.getElementById('btn-about-page').addEventListener('click', () => showPage('about'));
+    document.getElementById('btn-about-page').addEventListener('click', () => {
+        document.getElementById('modal-about').style.display = 'flex';
+        lucide.createIcons();
+    });
+    document.getElementById('btn-close-about').addEventListener('click', () => {
+        document.getElementById('modal-about').style.display = 'none';
+    });
+    document.getElementById('modal-about').addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay')) {
+            document.getElementById('modal-about').style.display = 'none';
+        }
+    });
 
     // About page link handlers — open in external browser
-    document.querySelectorAll('#page-about a[href^="http"]').forEach(link => {
+    document.querySelectorAll('#modal-about a[href^="http"]').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const url = link.getAttribute('href');

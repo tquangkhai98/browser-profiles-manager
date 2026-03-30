@@ -338,6 +338,7 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
     padding: 16px;
     transition: all var(--transition);
     animation: fadeIn 0.3s var(--ease);
+    position: relative;
 }
 
 .profile-card.filtered-out {
@@ -348,6 +349,83 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
     background: var(--surface-container);
     box-shadow: var(--shadow-sm);
     transform: translateY(-1px);
+}
+
+/* Drag Handle */
+.drag-handle {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--outline-variant);
+    cursor: grab;
+    transition: all var(--transition);
+    opacity: 0;
+    z-index: 2;
+}
+
+.profile-card:hover .drag-handle {
+    opacity: 1;
+}
+
+.drag-handle:hover {
+    background: var(--surface-container-high);
+    color: var(--on-surface-variant);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+    color: var(--primary);
+}
+
+.drag-handle svg {
+    pointer-events: none;
+}
+
+/* Drag States */
+.profile-card.dragging {
+    opacity: 0.4;
+    transform: scale(0.97);
+    box-shadow: none;
+    background: var(--surface-container-low);
+}
+
+.profile-card.drag-over {
+    background: var(--primary-dim);
+    border: 1.5px dashed var(--primary);
+    transform: scale(1.01);
+    box-shadow: 0 0 20px var(--primary-glow);
+}
+
+.profile-card.drag-over::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+    background: var(--primary-glow);
+    animation: dragPulse 1.2s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes dragPulse {
+    0%, 100% { opacity: 0; }
+    50%      { opacity: 1; }
+}
+
+/* Ghost element during drag */
+.profile-card.drag-ghost {
+    box-shadow: 0 12px 40px rgba(99, 102, 241, 0.3), var(--shadow-ambient);
+    border: 1.5px solid rgba(99, 102, 241, 0.4);
+    transform: rotate(1.5deg) scale(1.03);
+    z-index: 1000;
 }
 
 @keyframes fadeIn {
@@ -2214,13 +2292,22 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
 }
 
 /* ============================================
-   About Page
+   About Modal
    ============================================ */
 
-.about-page-scroll {
-    flex: 1;
+.about-modal {
+    width: 460px;
+    max-width: 90vw;
+    max-height: 80vh;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.about-modal-scroll {
     overflow-y: auto;
-    padding-bottom: 40px;
+    max-height: 80vh;
+    padding: 8px 0 24px;
 }
 
 /* Hero / App Identity */
@@ -2230,8 +2317,8 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
 }
 
 .about-app-icon {
-    width: 72px;
-    height: 72px;
+    width: 96px;
+    height: 96px;
     border-radius: var(--radius-lg);
     margin-bottom: 16px;
     box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
