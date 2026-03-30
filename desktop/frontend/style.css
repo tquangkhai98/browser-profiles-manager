@@ -2038,9 +2038,10 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
 }
 
 .ai-usecase-code {
+    position: relative;
     background: var(--surface-container-lowest);
     border-radius: var(--radius-sm);
-    padding: 8px 12px;
+    padding: 8px 36px 8px 12px;
 }
 
 .ai-usecase-code code {
@@ -2048,6 +2049,35 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
     font-size: 0.625rem;
     color: var(--green);
     word-break: break-all;
+}
+
+.ai-usecase-copy {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    background: var(--surface-container-high);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    padding: 4px 6px;
+    cursor: pointer;
+    transition: all var(--transition);
+    opacity: 0;
+}
+
+.ai-usecase-code:hover .ai-usecase-copy {
+    opacity: 1;
+}
+
+.ai-usecase-copy:hover {
+    background: var(--surface-bright);
+    color: var(--on-surface);
+}
+
+.ai-usecase-copy.copied {
+    color: var(--green);
+    background: var(--green-dim);
 }
 
 /* ---- Example Prompts Section ---- */

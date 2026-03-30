@@ -667,6 +667,24 @@ function bindEvents() {
         });
     });
 
+    // AI Integration: Copy use case command buttons
+    document.querySelectorAll('.ai-usecase-copy').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const code = btn.closest('.ai-usecase-code').querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.classList.add('copied');
+                const icon = btn.querySelector('i');
+                if (icon) { icon.setAttribute('data-lucide', 'check'); lucide.createIcons(); }
+                showToast(t('mcp_copied'), 'success');
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    if (icon) { icon.setAttribute('data-lucide', 'copy'); lucide.createIcons(); }
+                }, 2000);
+            }).catch(() => showToast(t('copy_failed'), 'error'));
+        });
+    });
+
     // AI Integration: Copy prompt buttons
     document.querySelectorAll('.ai-prompt-copy').forEach(btn => {
         btn.addEventListener('click', (e) => {
