@@ -1308,7 +1308,7 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
 
 /* Header logo icon */
 .header-logo-icon {
-    width: 22px;
-    height: 22px;
+    width: 32px;
+    height: 32px;
     border-radius: var(--radius-sm);
 }
