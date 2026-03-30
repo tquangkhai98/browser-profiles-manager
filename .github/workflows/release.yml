@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   release-macos:
-    name: Build & Release (macOS Universal)
+    name: Build & Release (macOS)
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -40,7 +40,7 @@ jobs:
           echo "date=${DATE}" >> $GITHUB_OUTPUT
           echo "Building ${VERSION} (${COMMIT}) at ${DATE}"
 
-      # ── CLI: Universal binary via lipo ──
+      # ── CLI binaries ──
       - name: Build CLI (arm64)
         env:
           GOARCH: arm64
@@ -66,39 +66,66 @@ jobs:
       - name: Create CLI universal binary
         run: lipo -create -output bpm bpm-arm64 bpm-amd64
 
-      # ── Desktop: Universal .app via Wails ──
+      # ── Desktop: Universal build ──
       - name: Build Desktop app (universal)
         working-directory: desktop
         run: wails build -platform darwin/universal
 
-      # ── Package ──
-      - name: Package CLI
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          tar -czf bpm-${VERSION}-darwin-universal.tar.gz bpm
-
-      - name: Create DMG
+      - name: Create DMG (Universal)
         run: |
           VERSION=${{ steps.version.outputs.version }}
           create-dmg \
-            --volname "BPM Desktop" \
+            --volname "BPM" \
             --volicon "desktop/build/appicon.png" \
             --window-pos 200 120 \
             --window-size 660 400 \
             --icon-size 120 \
-            --icon "bpm-desktop.app" 160 190 \
+            --icon "BPM.app" 160 190 \
             --app-drop-link 500 190 \
-            --hide-extension "bpm-desktop.app" \
+            --hide-extension "BPM.app" \
             --no-internet-enable \
-            "bpm-desktop-${VERSION}-darwin-universal.dmg" \
-            "desktop/build/bin/bpm-desktop.app"
+            "BPM-${VERSION}-darwin-universal.dmg" \
+            "desktop/build/bin/BPM.app"
 
+      # ── Desktop: x86_64 build ──
+      - name: Build Desktop app (x86_64)
+        working-directory: desktop
+        run: |
+          rm -rf build/bin
+          wails build -platform darwin/amd64
+
+      - name: Create DMG (x86_64)
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          create-dmg \
+            --volname "BPM" \
+            --volicon "desktop/build/appicon.png" \
+            --window-pos 200 120 \
+            --window-size 660 400 \
+            --icon-size 120 \
+            --icon "BPM.app" 160 190 \
+            --app-drop-link 500 190 \
+            --hide-extension "BPM.app" \
+            --no-internet-enable \
+            "BPM-${VERSION}-darwin-x86_64.dmg" \
+            "desktop/build/bin/BPM.app"
+
+      # ── Package CLI ──
+      - name: Package CLI binaries
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          tar -czf bpm-${VERSION}-darwin-universal.tar.gz bpm
+          tar -czf bpm-${VERSION}-darwin-x86_64.tar.gz bpm-amd64
+
+      # ── Checksums & Release ──
       - name: Generate checksums
         run: |
           VERSION=${{ steps.version.outputs.version }}
           shasum -a 256 \
+            BPM-${VERSION}-darwin-universal.dmg \
+            BPM-${VERSION}-darwin-x86_64.dmg \
             bpm-${VERSION}-darwin-universal.tar.gz \
-            bpm-desktop-${VERSION}-darwin-universal.dmg \
+            bpm-${VERSION}-darwin-x86_64.tar.gz \
             > checksums-${VERSION}-darwin.txt
 
       - name: Create GitHub Release
@@ -109,18 +136,20 @@ jobs:
           body: |
             ## BPM ${{ steps.version.outputs.version }}
 
-            ### Downloads (macOS Universal — Apple Silicon + Intel)
+            ### Downloads (macOS)
 
-            | File | Description |
-            |------|-------------|
-            | `bpm-desktop-${{ steps.version.outputs.version }}-darwin-universal.dmg` | 🖥️ Desktop app (DMG installer) |
-            | `bpm-${{ steps.version.outputs.version }}-darwin-universal.tar.gz` | ⌨️ CLI binary |
+            | File | Arch | Description |
+            |------|------|-------------|
+            | `BPM-${{ steps.version.outputs.version }}-darwin-universal.dmg` | Universal | 🖥️ Desktop app (Apple Silicon + Intel) |
+            | `BPM-${{ steps.version.outputs.version }}-darwin-x86_64.dmg` | Intel x86_64 | 🖥️ Desktop app (Intel only) |
+            | `bpm-${{ steps.version.outputs.version }}-darwin-universal.tar.gz` | Universal | ⌨️ CLI binary |
+            | `bpm-${{ steps.version.outputs.version }}-darwin-x86_64.tar.gz` | Intel x86_64 | ⌨️ CLI binary |
 
             ### Installation
 
             **Desktop:**
-            1. Download the `.dmg` file
-            2. Open it and drag **BPM Desktop** to **Applications**
+            1. Download the `.dmg` file matching your Mac architecture
+            2. Open it and drag **BPM** to **Applications**
             3. On first launch: **System Settings → Privacy & Security → Open Anyway**
 
             **CLI:**
@@ -128,7 +157,11 @@ jobs:
             tar -xzf bpm-${{ steps.version.outputs.version }}-darwin-universal.tar.gz
             sudo mv bpm /usr/local/bin/
             ```
+
+            > 💡 **Universal** builds run natively on both Apple Silicon and Intel Macs.
           files: |
-            bpm-desktop-${{ steps.version.outputs.version }}-darwin-universal.dmg
+            BPM-${{ steps.version.outputs.version }}-darwin-universal.dmg
+            BPM-${{ steps.version.outputs.version }}-darwin-x86_64.dmg
             bpm-${{ steps.version.outputs.version }}-darwin-universal.tar.gz
+            bpm-${{ steps.version.outputs.version }}-darwin-x86_64.tar.gz
             checksums-${{ steps.version.outputs.version }}-darwin.txt

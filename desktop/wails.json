@@ -1,7 +1,7 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "bpm-desktop",
-  "outputfilename": "bpm-desktop",
+  "name": "BPM",
+  "outputfilename": "BPM",
   "frontend:dir": "frontend",
   "frontend:install": "",
   "frontend:build": "",
