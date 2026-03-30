@@ -19,7 +19,7 @@ Supported IDEs:
   claude-code      Claude Code CLI (~/.claude/mcp_servers.json)
   claude-desktop   Claude Desktop App
   cursor           Cursor IDE (~/.cursor/mcp.json)
-  windsurf         Windsurf IDE
+  antigravity      Antigravity IDE (~/.gemini/settings.json)
 
 Examples:
   bpm install claude-code     # Add bpm to Claude Code

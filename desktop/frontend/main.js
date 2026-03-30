@@ -380,7 +380,10 @@ function showPage(pageName) {
     if (aiBtn) aiBtn.classList.toggle('active', pageName === 'ai');
 
     // Re-render Lucide icons for dynamic pages
-    if (pageName === 'ai') lucide.createIcons();
+    if (pageName === 'ai') {
+        lucide.createIcons();
+        loadIDEs();
+    }
 }
 
 async function openSettings() {
@@ -1513,12 +1516,15 @@ function ideIconTag(ideId) {
 }
 
 async function loadIDEs() {
-    const grid = document.getElementById('mcp-ide-grid');
-    if (!grid) return;
+    const grids = [
+        document.getElementById('mcp-ide-grid'),
+        document.getElementById('ai-mcp-ide-grid'),
+    ].filter(Boolean);
+    if (grids.length === 0) return;
 
     try {
         const ides = await callGo('ListIDEs') || [];
-        grid.innerHTML = ides.map(ide => {
+        const html = ides.map(ide => {
             const isEnabled = ide.bpm_enabled;
             const shortPath = ide.config_path.replace(/^\/Users\/[^/]+/, '~');
 
@@ -1546,10 +1552,11 @@ async function loadIDEs() {
             `;
         }).join('');
 
+        grids.forEach(g => g.innerHTML = html);
         lucide.createIcons();
     } catch (err) {
         console.error('Failed to load IDEs:', err);
-        grid.innerHTML = '<div style="color: var(--text-muted); font-size: 0.75rem; padding: 8px;">Failed to detect AI IDEs</div>';
+        grids.forEach(g => g.innerHTML = '<div style="color: var(--text-muted); font-size: 0.75rem; padding: 8px;">Failed to detect AI IDEs</div>');
     }
 }
 

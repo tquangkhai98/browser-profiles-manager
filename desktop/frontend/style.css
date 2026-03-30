@@ -1892,6 +1892,23 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
     margin: 0 auto;
 }
 
+/* ---- Quick Install on AI page ---- */
+
+.ai-install-section {
+    padding: 0 24px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.ai-install-section .mcp-install-section {
+    background: var(--surface-container-low);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    border: 1px solid var(--outline-variant);
+    margin-top: 0;
+    border-top: none;
+}
+
 /* ---- Tool Cards Section ---- */
 
 .ai-cards-section {
