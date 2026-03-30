@@ -11,3 +11,6 @@ Thumbs.db
 .idea/
 build/
 desktop/frontend/wailsjs/
+
+# Internal design docs (local-only)
+docs/STITCH.md

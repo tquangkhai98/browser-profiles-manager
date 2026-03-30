@@ -265,25 +265,23 @@ When you login to GitHub in one browser profile, that login is stored as cookies
 ## Screenshots
 
 <p align="center">
-  <img src="docs/wireframe/01-profile-list.png" width="800" alt="Profile List" />
+  <img src="docs/screenshots/01-profile-list.png" width="800" alt="Profile List" />
   <br><em>Profile List — manage all browser profiles</em>
 </p>
 
 <p align="center">
-  <img src="docs/wireframe/03-credential-view.png" width="800" alt="Credential View" />
-  <br><em>Credential View — inspect & sync cookies/logins</em>
+  <img src="docs/screenshots/02-ai-integration.png" width="800" alt="AI Agent Integration" />
+  <br><em>AI Agent Integration — connect profiles to MCP automation tools</em>
 </p>
 
 <p align="center">
-  <img src="docs/wireframe/04-settings.png" width="800" alt="Settings" />
-  <br><em>Settings — configure defaults and MCP</em>
+  <img src="docs/screenshots/03-settings.png" width="800" alt="Settings" />
+  <br><em>Settings — configure defaults, MCP server, and one-click IDE install</em>
 </p>
 
 ---
 
 ## Development
-
-> 📖 New to Go? See [Go Quick Guide](docs/GO_GUIDE.md) — beginner-friendly development guide.
 
 ### Prerequisites
 
@@ -350,8 +348,6 @@ browser-profiles-manager/
 
 - [PLAN.md](PLAN.md) — Technical implementation plan
 - [docs/PRD.md](docs/PRD.md) — Product requirements document
-- [docs/STITCH.md](docs/STITCH.md) — Design wireframes (Stitch MCP)
-- [docs/GO_GUIDE.md](docs/GO_GUIDE.md) — Go quick guide for beginners
 
 ## License
 
