@@ -15,6 +15,7 @@ import (
 	"github.com/tquangkhai98/browser-profiles-manager/internal/browser"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/config"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/credential"
+	"github.com/tquangkhai98/browser-profiles-manager/internal/install"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/profile"
 )
 
@@ -470,6 +471,69 @@ func (a *App) ExportAllProfiles() (string, error) {
 	}
 
 	return fmt.Sprintf("Exported %d profiles to %s", exported, dir), nil
+}
+
+// --- MCP Install operations ---
+
+// IDEInfo is a frontend-friendly IDE status.
+type IDEInfo struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	ConfigPath string `json:"config_path"`
+	Installed  bool   `json:"installed"`
+	BPMEnabled bool   `json:"bpm_enabled"`
+}
+
+// InstallResult holds the outcome of an install operation.
+type InstallResult struct {
+	IDE        string `json:"ide"`
+	ConfigPath string `json:"config_path"`
+	Action     string `json:"action"`
+	Message    string `json:"message"`
+}
+
+// ListIDEs returns all supported AI IDEs with their install status.
+func (a *App) ListIDEs() []IDEInfo {
+	ides := install.SupportedIDEs()
+	result := make([]IDEInfo, 0, len(ides))
+	for _, ide := range ides {
+		result = append(result, IDEInfo{
+			ID:         ide.ID,
+			Name:       ide.Name,
+			ConfigPath: ide.ConfigPath,
+			Installed:  ide.Installed,
+			BPMEnabled: ide.BPMEnabled,
+		})
+	}
+	return result
+}
+
+// InstallMCP adds bpm MCP config to the specified IDE.
+func (a *App) InstallMCP(ideID string) (*InstallResult, error) {
+	result, err := install.Install(ideID)
+	if err != nil {
+		return nil, err
+	}
+	return &InstallResult{
+		IDE:        result.IDE,
+		ConfigPath: result.ConfigPath,
+		Action:     result.Action,
+		Message:    result.Message,
+	}, nil
+}
+
+// UninstallMCP removes bpm MCP config from the specified IDE.
+func (a *App) UninstallMCP(ideID string) (*InstallResult, error) {
+	result, err := install.Uninstall(ideID)
+	if err != nil {
+		return nil, err
+	}
+	return &InstallResult{
+		IDE:        result.IDE,
+		ConfigPath: result.ConfigPath,
+		Action:     result.Action,
+		Message:    result.Message,
+	}, nil
 }
 
 // --- Helper functions ---

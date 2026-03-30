@@ -412,6 +412,9 @@ async function openSettings() {
         // Load MCP config
         const mcpConfig = await callGo('GetMCPConfig');
         document.getElementById('mcp-config-code').textContent = mcpConfig;
+
+        // Load IDE install status
+        await loadIDEs();
     } catch (err) {
         console.error('Failed to load settings:', err);
     }
@@ -1485,5 +1488,88 @@ function setInfoNote(modalSelector, text) {
         note.textContent = '';
         if (icon) note.appendChild(icon);
         note.append(` ${text}`);
+    }
+}
+
+// ============================================
+// MCP Install / Uninstall
+// ============================================
+
+const ideIcons = {
+    'claude-code':    'assets/icons/claude.png',
+    'claude-desktop': 'assets/icons/claude.png',
+    'cursor':         'assets/icons/cursor.png',
+    'antigravity':    'assets/icons/antigravity.png',
+};
+
+function ideIconTag(ideId) {
+    const url = ideIcons[ideId];
+    const fallback = {'claude-code':'🟣','claude-desktop':'🟣','cursor':'🔵','antigravity':'✨'}[ideId] || '⚪';
+    if (!url) return `<span class="mcp-ide-icon">${fallback}</span>`;
+    return `<img src="${url}" class="mcp-ide-icon-img" width="20" height="20" alt="" onerror="this.outerHTML='<span class=\\'mcp-ide-icon\\'>${fallback}</span>'" />`;
+}
+
+async function loadIDEs() {
+    const grid = document.getElementById('mcp-ide-grid');
+    if (!grid) return;
+
+    try {
+        const ides = await callGo('ListIDEs') || [];
+        grid.innerHTML = ides.map(ide => {
+            const isEnabled = ide.bpm_enabled;
+            const shortPath = ide.config_path.replace(/^\/Users\/[^/]+/, '~');
+
+            return `
+                <div class="mcp-ide-card ${isEnabled ? 'enabled' : ''}" data-ide="${escapeAttr(ide.id)}">
+                    <div class="mcp-ide-info">
+                        ${ideIconTag(ide.id)}
+                        <div>
+                            <div class="mcp-ide-name">${escapeHtml(ide.name)}</div>
+                            <div class="mcp-ide-path" title="${escapeAttr(ide.config_path)}">${escapeHtml(shortPath)}</div>
+                        </div>
+                    </div>
+                    <div class="mcp-ide-status">
+                        ${isEnabled
+                            ? `<span class="mcp-ide-badge active">Active</span>
+                               <button class="btn-install uninstall" onclick="handleUninstallMCP('${escapeAttr(ide.id)}')" title="Remove bpm from ${escapeAttr(ide.name)}">
+                                   <i data-lucide="x" class="icon-xxs"></i> Remove
+                               </button>`
+                            : `<button class="btn-install install" onclick="handleInstallMCP('${escapeAttr(ide.id)}')" title="Install bpm to ${escapeAttr(ide.name)}">
+                                   <i data-lucide="download" class="icon-xxs"></i> Install
+                               </button>`
+                        }
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        lucide.createIcons();
+    } catch (err) {
+        console.error('Failed to load IDEs:', err);
+        grid.innerHTML = '<div style="color: var(--text-muted); font-size: 0.75rem; padding: 8px;">Failed to detect AI IDEs</div>';
+    }
+}
+
+async function handleInstallMCP(ideID) {
+    try {
+        const result = await callGo('InstallMCP', ideID);
+        if (result) {
+            showToast(result.message, result.action === 'installed' ? 'success' : 'info');
+            await loadIDEs(); // Refresh status
+        }
+    } catch (err) {
+        showToast(String(err), 'error');
+    }
+}
+
+async function handleUninstallMCP(ideID) {
+    try {
+        const result = await callGo('UninstallMCP', ideID);
+        if (result) {
+            showToast(result.message, result.action === 'uninstalled' ? 'success' : 'info');
+            await loadIDEs(); // Refresh status
+        }
+    } catch (err) {
+        showToast(String(err), 'error');
     }
 }

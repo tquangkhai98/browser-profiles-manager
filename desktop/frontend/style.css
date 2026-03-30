@@ -810,6 +810,156 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
     margin-top: 10px;
 }
 
+/* MCP Quick Install Section */
+.mcp-install-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--outline-variant);
+}
+
+.mcp-install-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.mcp-install-title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--on-surface);
+}
+
+.mcp-install-subtitle {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+}
+
+.mcp-ide-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.mcp-ide-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface-container);
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    transition: all var(--transition);
+}
+
+.mcp-ide-card:hover {
+    background: var(--surface-container-high);
+}
+
+.mcp-ide-card.enabled {
+    border-color: rgba(34, 197, 94, 0.25);
+    background: rgba(34, 197, 94, 0.05);
+}
+
+.mcp-ide-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mcp-ide-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.mcp-ide-icon-img {
+    border-radius: 4px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.mcp-ide-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--on-surface);
+}
+
+.mcp-ide-path {
+    font-size: 0.5625rem;
+    color: var(--text-muted);
+    font-family: monospace;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mcp-ide-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mcp-ide-badge {
+    font-size: 0.5625rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.mcp-ide-badge.active {
+    background: var(--green-dim);
+    color: var(--green);
+}
+
+.mcp-ide-badge.inactive {
+    background: var(--surface-container-highest);
+    color: var(--text-muted);
+}
+
+.btn-install {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 0.625rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.btn-install.install {
+    background: linear-gradient(135deg, var(--primary), var(--primary-container));
+    color: var(--on-primary);
+}
+
+.btn-install.install:hover {
+    box-shadow: 0 0 12px var(--primary-glow);
+    filter: brightness(1.1);
+}
+
+.btn-install.uninstall {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--outline-variant);
+}
+
+.btn-install.uninstall:hover {
+    background: var(--red-dim);
+    color: var(--red);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.btn-install:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .settings-data-actions {
     display: flex;
     gap: 10px;
