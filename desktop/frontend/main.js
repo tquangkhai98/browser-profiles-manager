@@ -6,7 +6,7 @@
 let profiles = [];
 let browsers = [];
 let refreshInterval = null;
-let currentPage = 'profiles'; // 'profiles' | 'settings' | 'ai'
+let currentPage = 'profiles'; // 'profiles' | 'settings' | 'ai' | 'about'
 let lastProfileHash = '';
 let currentLang = localStorage.getItem('bpm-lang') || 'en';
 let currentTheme = localStorage.getItem('bpm-theme') || 'dark';
@@ -125,6 +125,13 @@ const i18n = {
         'ai_step_automate': 'Automate Forever',
         'ai_comparison_title': 'Comparison',
         'ai_warning': 'Never open the same profile in two browsers simultaneously — bpm uses file locks to prevent profile corruption.',
+        // About page
+        'about': 'About',
+        'about_author': 'Author',
+        'about_repo': 'Repository',
+        'about_tech': 'Tech Stack',
+        'about_open_github': 'Open on GitHub',
+        'about_tagline': 'Manage isolated Chromium browser profiles for AI-powered automation',
     },
     vi: {
         // Header
@@ -234,6 +241,13 @@ const i18n = {
         'ai_step_automate': 'Tự động hoá',
         'ai_comparison_title': 'So sánh',
         'ai_warning': 'Không mở cùng profile trên hai trình duyệt đồng thời — bpm dùng file lock để ngăn hư hại profile.',
+        // About page
+        'about': 'Giới thiệu',
+        'about_author': 'Tác giả',
+        'about_repo': 'Kho mã nguồn',
+        'about_tech': 'Công nghệ',
+        'about_open_github': 'Mở trên GitHub',
+        'about_tagline': 'Quản lý browser profiles cô lập cho tự động hoá bằng AI',
     }
 };
 
@@ -356,14 +370,14 @@ function showPage(pageName) {
 
     // Show/hide status bar on non-profiles pages
     document.getElementById('status-bar').style.display =
-        (pageName === 'settings' || pageName === 'ai') ? 'none' : 'flex';
+        pageName === 'profiles' ? 'flex' : 'none';
 
     // Toggle AI button active state
     const aiBtn = document.getElementById('btn-ai-integration');
     if (aiBtn) aiBtn.classList.toggle('active', pageName === 'ai');
 
-    // Re-render Lucide icons for AI page
-    if (pageName === 'ai') lucide.createIcons();
+    // Re-render Lucide icons for dynamic pages
+    if (pageName === 'ai' || pageName === 'about') lucide.createIcons();
 }
 
 async function openSettings() {
@@ -523,6 +537,21 @@ function bindEvents() {
     });
     document.getElementById('btn-back-settings').addEventListener('click', () => showPage('profiles'));
     document.getElementById('btn-back-ai').addEventListener('click', () => showPage('profiles'));
+    document.getElementById('btn-back-about').addEventListener('click', () => showPage('profiles'));
+    document.getElementById('btn-about-page').addEventListener('click', () => showPage('about'));
+
+    // About page link handlers — open in external browser
+    document.querySelectorAll('#page-about a[href^="http"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const url = link.getAttribute('href');
+            if (window.runtime && window.runtime.BrowserOpenURL) {
+                window.runtime.BrowserOpenURL(url);
+            } else {
+                window.open(url, '_blank');
+            }
+        });
+    });
     document.getElementById('btn-sync-header').addEventListener('click', openSyncModal);
 
     // Language dropdown toggle
@@ -1221,7 +1250,15 @@ function applyLanguage(lang) {
         // AI Integration page
         'ai-btn-header': () => setInnerAfterIcon('btn-ai-integration', t('ai_agent')),
         'ai-back-btn': () => setInnerAfterIcon('btn-back-ai', t('back')),
-        'ai-page-title': () => { const el = document.querySelector('#page-ai .settings-page-title'); if (el) el.textContent = t('ai_hero_title'); },
+        'ai-warning-text': () => { const el = document.querySelector('.ai-warning-text'); if (el) el.textContent = t('ai_warning'); },
+        // About page
+        'about-back-btn': () => setInnerAfterIcon('btn-back-about', t('back')),
+        'about-tagline': () => { const el = document.querySelector('.about-tagline'); if (el) el.textContent = t('about_tagline'); },
+        'about-author-title': () => { const els = document.querySelectorAll('.about-section-title'); if (els[0]) els[0].textContent = t('about_author'); },
+        'about-repo-title': () => { const els = document.querySelectorAll('.about-section-title'); if (els[1]) els[1].textContent = t('about_repo'); },
+        'about-tech-title': () => { const els = document.querySelectorAll('.about-section-title'); if (els[2]) els[2].textContent = t('about_tech'); },
+        'about-repo-btn': () => setInnerAfterIcon('about-repo-link', t('about_open_github')),
+        'about-settings-btn': () => setInnerAfterIcon('btn-about-page', t('about')),
         'ai-badge': () => setText('.ai-badge-text', t('ai_hero_badge')),
         'ai-title': () => setText('.ai-hero-title', t('ai_hero_title')),
         'ai-tagline': () => setText('.ai-hero-tagline', t('ai_hero_tagline')),

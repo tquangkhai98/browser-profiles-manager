@@ -1408,6 +1408,24 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
     border-radius: var(--radius-sm);
 }
 
+/* Settings About Link */
+.settings-about-link {
+    text-align: center;
+    padding-top: 16px;
+    margin-top: 8px;
+    border-top: 1px solid var(--outline-variant);
+}
+
+.settings-about-link .btn-ghost {
+    font-size: 0.75rem;
+    gap: 6px;
+    color: var(--text-muted);
+}
+
+.settings-about-link .btn-ghost:hover {
+    color: var(--primary);
+}
+
 /* ============================================
    AI Integration Page — Marketing Feature
    ============================================ */
@@ -2193,5 +2211,257 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
 .ai-prompt-copy.copied {
     color: var(--green);
     background: var(--green-dim);
+}
+
+/* ============================================
+   About Page
+   ============================================ */
+
+.about-page-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 40px;
+}
+
+/* Hero / App Identity */
+.about-hero {
+    text-align: center;
+    padding: 40px 24px 24px;
+}
+
+.about-app-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
+}
+
+.about-app-name {
+    font-size: 1.375rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--on-surface);
+    margin-bottom: 4px;
+}
+
+.about-version {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-dim);
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    margin-bottom: 12px;
+}
+
+.about-tagline {
+    font-size: 0.75rem;
+    color: var(--on-surface-variant);
+    max-width: 400px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+/* Section */
+.about-section {
+    padding: 0 24px 24px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.about-section-title {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+}
+
+/* Author Card */
+.about-author-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(45, 52, 73, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    transition: all var(--transition);
+}
+
+.about-author-card:hover {
+    background: rgba(45, 52, 73, 0.8);
+}
+
+[data-theme="light"] .about-author-card {
+    background: rgba(255, 255, 255, 0.65);
+}
+
+[data-theme="light"] .about-author-card:hover {
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.about-avatar-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-dim);
+}
+
+.about-author-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.about-author-name {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--on-surface);
+}
+
+.about-author-handle {
+    font-size: 0.6875rem;
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.about-author-email {
+    font-size: 0.625rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.about-link-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-container-high);
+    border-radius: 50%;
+    color: var(--on-surface-variant);
+    text-decoration: none;
+    transition: all var(--transition);
+    flex-shrink: 0;
+}
+
+.about-link-btn:hover {
+    background: var(--primary-dim);
+    color: var(--primary);
+}
+
+/* Repo Card */
+.about-repo-card {
+    background: rgba(45, 52, 73, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    transition: all var(--transition);
+}
+
+.about-repo-card:hover {
+    background: rgba(45, 52, 73, 0.8);
+}
+
+[data-theme="light"] .about-repo-card {
+    background: rgba(255, 255, 255, 0.65);
+}
+
+[data-theme="light"] .about-repo-card:hover {
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.about-repo-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 6px;
+}
+
+.about-repo-desc {
+    font-size: 0.6875rem;
+    color: var(--on-surface-variant);
+    line-height: 1.5;
+    margin-bottom: 14px;
+}
+
+.about-repo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    font-family: var(--font);
+    color: var(--on-primary);
+    background: linear-gradient(135deg, var(--primary), var(--primary-container));
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: all var(--transition);
+}
+
+.about-repo-btn:hover {
+    box-shadow: 0 0 16px var(--primary-glow);
+    transform: translateY(-1px);
+}
+
+/* Tech Stack */
+.about-tech-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.about-tech-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--on-surface-variant);
+    background: rgba(45, 52, 73, 0.5);
+    border-radius: var(--radius);
+    transition: all var(--transition);
+}
+
+.about-tech-badge:hover {
+    background: rgba(45, 52, 73, 0.75);
+    color: var(--on-surface);
+}
+
+[data-theme="light"] .about-tech-badge {
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.about-tech-icon {
+    font-size: 0.875rem;
+}
+
+/* Footer */
+.about-footer {
+    text-align: center;
+    padding-top: 8px;
+    border-top: 1px solid var(--outline-variant);
+}
+
+.about-license {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.about-built {
+    font-size: 0.625rem;
+    color: var(--text-muted);
+    opacity: 0.7;
 }
 
