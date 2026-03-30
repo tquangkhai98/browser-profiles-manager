@@ -1,16 +1,30 @@
 # bpm — Browser Profiles Manager
 
+[![Build](https://img.shields.io/badge/build-passing-brightgreen)]()
+[![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white)]()
+[![License](https://img.shields.io/badge/license-MIT-blue)]()
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)]()
+
 > Centralized browser profile management for AI IDEs
 
 **bpm** is a CLI tool + MCP server that manages isolated Chromium browser profiles across AI-powered development environments like Claude Code, Cursor, and Antigravity.
 
-## Problem
+---
+
+## Why bpm?
 
 AI IDEs spawn their own Chromium instances with ephemeral profiles:
-- 🔑 Login sessions lost between runs
-- 💥 Profile conflicts when parallel agents use the same directory
-- 🔄 No way to sync credentials across tools
-- 🤖 No profile awareness for headless/cron agents
+
+| Pain Point | Impact |
+|-----------|--------|
+| 🔑 Login sessions lost between runs | Re-authenticate repeatedly (OAuth, 2FA) |
+| 💥 Profile conflicts across parallel agents | Browser crashes, corrupt data |
+| 🔄 No credential sync across tools | Each tool starts from scratch |
+| 📁 Profiles scattered across filesystem | Hard to audit, clean up, back up |
+
+**No existing tool solves this.** Browser MCP does automation, not profile management. AdsPower MCP is closed ecosystem. chrome-cli controls tabs, not profiles.
+
+---
 
 ## Features
 
@@ -23,6 +37,8 @@ AI IDEs spawn their own Chromium instances with ephemeral profiles:
 | **Import/Export** | Import existing Chrome profiles, export for backup |
 | **MCP Server** | Expose all features to any AI IDE via MCP protocol |
 | **Desktop App** | Simple GUI for visual management (Wails) |
+
+---
 
 ## Quick Start
 
@@ -49,9 +65,11 @@ bpm import ~/Library/Application\ Support/Google/Chrome/Default my-chrome
 bpm map ~/projects/my-app work-staging
 ```
 
+---
+
 ## MCP Integration
 
-Add to your AI IDE's MCP config (Claude Code, Cursor, Antigravity, etc.):
+Add to your AI IDE's MCP config (Claude Code, Cursor, Antigravity):
 
 ```json
 {
@@ -72,10 +90,14 @@ Add to your AI IDE's MCP config (Claude Code, Cursor, Antigravity, etc.):
 | `profile_list` | List all profiles with status |
 | `profile_use` | Launch browser with profile |
 | `profile_status` | Check lock status |
+| `profile_delete` | Delete a profile |
+| `mapping_set` | Map directory to profile |
 | `mapping_get` | Resolve profile for a directory |
 | `creds_inspect` | List credentials in a profile |
 | `creds_sync` | Sync credentials between profiles |
 | `browser_detect` | List installed browsers |
+
+---
 
 ## CLI Commands
 
@@ -83,220 +105,64 @@ Add to your AI IDE's MCP config (Claude Code, Cursor, Antigravity, etc.):
 bpm create <name>          Create isolated profile
 bpm list [--json]          List profiles with status
 bpm delete <name>          Delete profile + data
-bpm status <name>          Check lock/usage status
+bpm status <name> [--json] Check lock/usage status
 bpm use <name>             Launch browser with profile
-bpm detect                 List installed browsers
+bpm detect [--json]        List installed browsers
 bpm map <dir> <profile>    Map project dir → profile
-bpm map --auto             Auto-resolve profile for cwd
-bpm map --list             Show all mappings
-bpm creds <name>           Inspect credentials in profile
+bpm map --auto [--json]    Auto-resolve profile for cwd
+bpm map --list [--json]    Show all mappings
+bpm creds <name> [--json]  Inspect credentials in profile
 bpm sync <src> <dst>       Sync credentials between profiles
 bpm import <path> <name>   Import existing Chrome profile
 bpm export <name> <path>   Export profile for backup
 bpm serve                  Start MCP server
 ```
 
-## Development
+### JSON Output
 
-> 📖 Chưa biết Go? Xem [Go Quick Guide](docs/GO_GUIDE.md) — hướng dẫn cơ bản dành cho developer mới.
-
-### Prerequisites
-
-| Tool | Version | Install |
-|------|---------|---------|
-| Go | ≥ 1.25 | `brew install go` |
-| Wails CLI | v2 | `go install github.com/wailsapp/wails/v2/cmd/wails@latest` |
-| Node.js | ≥ 18 | `brew install node` (for desktop frontend) |
-
-### Project Structure
-
-```
-browser-profiles-manager/
-├── main.go                 # CLI entry point
-├── go.mod                  # Go module & dependencies
-├── cmd/                    # CLI commands (Cobra)
-│   ├── root.go             #   Root command setup
-│   ├── create.go           #   bpm create
-│   ├── list.go             #   bpm list
-│   ├── use.go              #   bpm use
-│   ├── serve.go            #   bpm serve (MCP server)
-│   └── ...                 #   Other subcommands
-├── internal/               # Core business logic (private packages)
-│   ├── profile/            #   Profile CRUD
-│   ├── browser/            #   Browser detection & launch
-│   ├── credential/         #   Credential read (SQLite)
-│   ├── mapping/            #   Directory ↔ profile mapping
-│   ├── config/             #   Configuration management
-│   └── mcp/                #   MCP server implementation
-├── desktop/                # Wails desktop app (separate binary)
-│   ├── main.go             #   Desktop entry point
-│   ├── app.go              #   App struct (Go ↔ JS bridge)
-│   ├── wails.json          #   Wails configuration
-│   └── frontend/           #   HTML/CSS/JS frontend
-├── build/                  # Build output
-└── docs/                   # Documentation
-```
-
-### Build & Run
+All read commands support `--json` for scripting and piping:
 
 ```bash
-# ────────────────────────────────────────────
-# 🔨  Build CLI binary
-# ────────────────────────────────────────────
-go build -o bpm .                   # Build → ./bpm
-go build -o bpm -v .                # Build verbose (show packages)
+$ bpm list --json
+[
+  {
+    "name": "work-staging",
+    "browser": "chrome",
+    "locked": false,
+    "created_at": "2026-03-29T12:00:00Z"
+  }
+]
 
-# ────────────────────────────────────────────
-# ▶️  Run without building
-# ────────────────────────────────────────────
-go run .                            # Run CLI directly
-go run . list                       # Run a specific command
-go run . create test-profile        # Run with arguments
+$ bpm detect --json
+[
+  {
+    "name": "Google Chrome",
+    "id": "chrome",
+    "exe_path": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+  }
+]
 
-# ────────────────────────────────────────────
-# 🖥️  Desktop App (Wails)
-# ────────────────────────────────────────────
-cd desktop
-wails dev                           # Dev mode with hot-reload
-wails build                         # Production build → build/bin/
-wails build -debug                  # Build with DevTools enabled
-
-# ────────────────────────────────────────────
-# 📦  Install globally
-# ────────────────────────────────────────────
-go install .                        # Install to $GOPATH/bin/bpm
+$ bpm creds work-staging --json
+{
+  "profile_name": "work-staging",
+  "sites": [
+    {"domain": "github.com", "cookie_count": 12, "login_count": 1}
+  ],
+  "total_cookies": 12,
+  "total_logins": 1
+}
 ```
 
-### Debug
+---
 
-```bash
-# ────────────────────────────────────────────
-# 🐛  Debug with Delve (Go debugger)
-# ────────────────────────────────────────────
+## How Credential Sync Works
 
-# Install Delve
-go install github.com/go-delve/delve/cmd/dlv@latest
+When you login to GitHub in one browser profile, that login is stored as cookies and saved passwords. **Credential sync** copies those databases to another profile:
 
-# Debug CLI
-dlv debug .                         # Start debugger on main.go
-dlv debug . -- list                 # Debug with CLI arguments
-dlv debug . -- create my-profile    # Debug specific command
-
-# Debug with breakpoint
-dlv debug . -- use test             # Then in dlv console:
-                                    #   break cmd/use.go:25
-                                    #   continue
-                                    #   print profileName
-                                    #   next / step / continue
-
-# Debug desktop app
-cd desktop
-dlv debug .                         # Debug Wails app
-
-# ────────────────────────────────────────────
-# 🔍  Build with debug symbols (no optimization)
-# ────────────────────────────────────────────
-go build -gcflags="all=-N -l" -o bpm .    # Full debug info
-```
-
-### Logging & Troubleshooting
-
-```bash
-# ────────────────────────────────────────────
-# 📋  Print debug info in code
-# ────────────────────────────────────────────
-# Use fmt.Printf / fmt.Println for quick debug output:
-#   fmt.Printf("[DEBUG] profile: %+v\n", profile)
-#   fmt.Printf("[DEBUG] err: %v\n", err)
-
-# Use log package for structured logging:
-#   log.Printf("loading config from %s", path)
-#   log.Fatalf("critical error: %v", err)   ← exits program
-
-# ────────────────────────────────────────────
-# 🔎  Verbose run (see what Go does)
-# ────────────────────────────────────────────
-go build -v .                       # Show packages being compiled
-go build -x .                       # Show ALL build commands executed
-go run -race .                      # Run with race condition detector
-
-# ────────────────────────────────────────────
-# 📊  Profile & trace
-# ────────────────────────────────────────────
-go test -cpuprofile cpu.prof -bench .   # CPU profiling
-go tool pprof cpu.prof                  # Analyze profile
-go test -trace trace.out                # Execution trace
-go tool trace trace.out                 # View trace in browser
-```
-
-### Testing
-
-```bash
-# ────────────────────────────────────────────
-# 🧪  Run tests
-# ────────────────────────────────────────────
-go test ./...                       # Run ALL tests in project
-go test ./internal/profile/         # Test specific package
-go test ./internal/profile/ -v      # Verbose (show each test name)
-go test ./internal/profile/ -run TestCreate  # Run specific test
-go test ./... -count=1              # No cache, fresh run
-go test ./... -cover                # Show code coverage %
-go test ./... -coverprofile=coverage.out     # Generate coverage file
-go tool cover -html=coverage.out             # View coverage in browser
-```
-
-### Dependency Management
-
-```bash
-# ────────────────────────────────────────────
-# 📦  Manage Go modules
-# ────────────────────────────────────────────
-go mod tidy                         # Clean unused deps, add missing ones
-go mod download                     # Download all dependencies
-go mod vendor                       # Copy deps to vendor/ folder
-go mod graph                        # Show dependency graph
-go get github.com/some/package      # Add a new dependency
-go get -u ./...                     # Update all dependencies
-go list -m all                      # List all modules
-```
-
-### Clean & Reset
-
-```bash
-# ────────────────────────────────────────────
-# 🧹  Cleanup
-# ────────────────────────────────────────────
-go clean                            # Remove build cache for this package
-go clean -cache                     # Clear entire build cache
-go clean -testcache                 # Clear test result cache
-rm -f bpm                           # Remove built binary
-rm -rf build/                       # Remove build output
-```
-
-### Common Development Workflow
-
-```bash
-# 1. Pull latest & sync deps
-git pull && go mod tidy
-
-# 2. Make changes to code...
-
-# 3. Quick test run
-go run . list
-
-# 4. Run tests
-go test ./...
-
-# 5. Build final binary
-go build -o bpm .
-
-# 6. Test the binary
-./bpm list
-./bpm create my-test
-
-# 7. Commit
-git add . && git commit -m "feat: add new feature"
-```
+1. Reads Chromium SQLite databases (`Cookies`, `Login Data`) from source
+2. Backs up target profile's databases
+3. Copies databases to target via atomic write (temp file → rename)
+4. ⚠️ **bpm never decrypts passwords** — they work because Chromium uses OS-level keychain (macOS Keychain / Windows DPAPI)
 
 ---
 
@@ -317,10 +183,57 @@ git add . && git commit -m "feat: add new feature"
   <br><em>Settings — configure defaults and MCP</em>
 </p>
 
+---
+
+## Development
+
+> 📖 New to Go? See [Go Quick Guide](docs/GO_GUIDE.md) — beginner-friendly development guide.
+
+### Prerequisites
+
+| Tool | Version | Install |
+|------|---------|---------|
+| Go | ≥ 1.25 | `brew install go` |
+| Wails CLI | v2 | `go install github.com/wailsapp/wails/v2/cmd/wails@latest` |
+| Node.js | ≥ 18 | `brew install node` (for desktop frontend) |
+
+### Build & Test
+
+```bash
+make build          # Build CLI with version info
+make test           # Run all tests
+make cover          # Generate coverage report
+make lint           # Run staticcheck
+make install        # Install to $GOPATH/bin
+make desktop        # Build desktop app
+make dev            # Desktop dev mode with hot-reload
+make clean          # Remove build artifacts
+```
+
+### Project Structure
+
+```
+browser-profiles-manager/
+├── main.go                 # CLI entry point
+├── cmd/                    # CLI commands (Cobra)
+├── internal/               # Core business logic
+│   ├── profile/            #   Profile CRUD + locking
+│   ├── browser/            #   Browser detection & launch
+│   ├── credential/         #   Credential read/sync (SQLite)
+│   ├── mapping/            #   Directory ↔ profile mapping
+│   ├── config/             #   Configuration management
+│   └── mcp/                #   MCP server implementation
+├── desktop/                # Wails desktop app
+├── Makefile                # Build automation
+└── docs/                   # Documentation
+```
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
+|-------|-----------:|
 | Core + CLI | Go + Cobra |
 | MCP Server | mcp-go (stdio) |
 | Desktop App | Wails v2 |
@@ -334,6 +247,8 @@ git add . && git commit -m "feat: add new feature"
 | macOS | ✅ Supported |
 | Windows | ✅ Supported |
 | Linux | 🔜 Planned |
+
+---
 
 ## Documentation
 
