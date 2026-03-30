@@ -109,6 +109,43 @@
                 <div class="settings-path">
                     <i data-lucide="folder" class="icon-xs"></i>
                     <span id="settings-profiles-dir">~/.local/share/bpm/profiles/</span>
+                    <button class="btn-path-change" id="btn-change-profiles-dir" title="Change directory">
+                        <i data-lucide="external-link" class="icon-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appearance -->
+        <div class="settings-card">
+            <div class="settings-card-title">
+                <i data-lucide="palette" class="icon-sm"></i>
+                Appearance
+            </div>
+            <div class="form-group">
+                <label>Theme</label>
+                <div class="settings-radio-group" id="settings-theme-group">
+                    <button class="settings-radio-btn active" data-value="dark">
+                        <i data-lucide="moon" class="icon-xs"></i>
+                        Dark
+                    </button>
+                    <button class="settings-radio-btn" data-value="light">
+                        <i data-lucide="sun" class="icon-xs"></i>
+                        Light
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Language</label>
+                <div class="settings-radio-group" id="settings-lang-group">
+                    <button class="settings-radio-btn active" data-value="en">
+                        <span class="lang-flag">🇺🇸</span>
+                        English
+                    </button>
+                    <button class="settings-radio-btn" data-value="vi">
+                        <span class="lang-flag">🇻🇳</span>
+                        Tiếng Việt
+                    </button>
                 </div>
             </div>
         </div>
@@ -135,6 +172,10 @@
                 Data
             </div>
             <div class="settings-data-actions">
+                <button class="btn btn-secondary" id="btn-open-config">
+                    <i data-lucide="folder-open" class="icon-xs"></i>
+                    Open config folder
+                </button>
                 <button class="btn btn-secondary" id="btn-export-all">
                     <i data-lucide="download" class="icon-xs"></i>
                     Export all profiles
@@ -146,7 +187,25 @@
             </div>
         </div>
 
-        <div class="settings-version" id="settings-version">v1.0.0</div>
+        <!-- About -->
+        <div class="settings-about" id="settings-about">
+            <div class="about-row">
+                <span class="about-label">Version</span>
+                <span class="about-value" id="about-version">dev</span>
+            </div>
+            <div class="about-row">
+                <span class="about-label">Commit</span>
+                <span class="about-value about-mono" id="about-commit">none</span>
+            </div>
+            <div class="about-row">
+                <span class="about-label">Built</span>
+                <span class="about-value" id="about-date">unknown</span>
+            </div>
+            <div class="about-row">
+                <span class="about-label">Config</span>
+                <span class="about-value about-mono" id="about-config-dir">~/.config/bpm</span>
+            </div>
+        </div>
     </div>
 
     <!-- Bottom Status Bar -->

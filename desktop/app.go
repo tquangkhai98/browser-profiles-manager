@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -20,12 +21,22 @@ import (
 // App is the Wails application backend.
 // All exported methods are automatically available to the frontend via window.go.main.App.
 type App struct {
-	ctx context.Context
+	ctx     context.Context
+	version string
+	commit  string
+	date    string
 }
 
 // NewApp creates the application struct.
 func NewApp() *App {
-	return &App{}
+	return &App{version: "dev", commit: "none", date: "unknown"}
+}
+
+// SetBuildInfo injects build-time variables from ldflags.
+func (a *App) SetBuildInfo(version, commit, date string) {
+	a.version = version
+	a.commit = commit
+	a.date = date
 }
 
 // startup is called when the app starts. The context is saved for runtime calls.
@@ -291,6 +302,9 @@ type SettingsInfo struct {
 	DefaultBrowser string `json:"default_browser"`
 	ProfilesDir    string `json:"profiles_dir"`
 	Version        string `json:"version"`
+	Commit         string `json:"commit"`
+	BuildDate      string `json:"build_date"`
+	ConfigDir      string `json:"config_dir"`
 }
 
 // GetSettings returns current settings.
@@ -301,11 +315,15 @@ func (a *App) GetSettings() (*SettingsInfo, error) {
 	}
 
 	profilesDir, _ := config.ProfilesDir()
+	configDir, _ := config.ConfigDir()
 
 	return &SettingsInfo{
 		DefaultBrowser: cfg.DefaultBrowser,
 		ProfilesDir:    profilesDir,
-		Version:        "1.0.0",
+		Version:        a.version,
+		Commit:         a.commit,
+		BuildDate:      a.date,
+		ConfigDir:      configDir,
 	}, nil
 }
 
@@ -321,16 +339,78 @@ func (a *App) SaveDefaultBrowser(browserID string) error {
 	return config.SaveWithLock(cfg)
 }
 
+// ChangeProfilesDir opens a directory picker and sets it as the custom profiles directory.
+// Returns the selected path, or empty string if cancelled.
+func (a *App) ChangeProfilesDir() (string, error) {
+	dir, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Select Profiles Directory",
+	})
+	if err != nil {
+		return "", err
+	}
+	if dir == "" {
+		return "", nil // User cancelled
+	}
+
+	// Ensure directory exists
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return "", fmt.Errorf("cannot create directory: %w", err)
+	}
+
+	cfg, unlock, err := config.LoadWithLock()
+	if err != nil {
+		return "", err
+	}
+	defer unlock()
+
+	cfg.CustomProfilesDir = dir
+	if err := config.SaveWithLock(cfg); err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
+// ResetSettings resets all settings to defaults while preserving profiles.
+func (a *App) ResetSettings() error {
+	cfg, unlock, err := config.LoadWithLock()
+	if err != nil {
+		return err
+	}
+	defer unlock()
+
+	cfg.DefaultBrowser = ""
+	cfg.CustomProfilesDir = ""
+	cfg.Mappings = nil
+	return config.SaveWithLock(cfg)
+}
+
+// OpenConfigDir opens the config directory in the OS file manager.
+func (a *App) OpenConfigDir() error {
+	configDir, err := config.ConfigDir()
+	if err != nil {
+		return err
+	}
+	return exec.Command("open", configDir).Start()
+}
+
 // GetMCPConfig returns the MCP server JSON configuration snippet.
+// It auto-detects the bpm binary path for accuracy.
 func (a *App) GetMCPConfig() string {
-	return `{
-  "mcpServers": {
-    "bpm": {
-      "command": "bpm",
-      "args": ["serve"]
-    }
-  }
-}`
+	bpmPath := "bpm"
+	if resolved, err := exec.LookPath("bpm"); err == nil {
+		bpmPath = resolved
+	}
+
+	cfg := map[string]interface{}{
+		"mcpServers": map[string]interface{}{
+			"bpm": map[string]interface{}{
+				"command": bpmPath,
+				"args":    []string{"serve"},
+			},
+		},
+	}
+	data, _ := json.MarshalIndent(cfg, "", "  ")
+	return string(data)
 }
 
 // ExportAllProfiles exports all profiles to the selected directory.

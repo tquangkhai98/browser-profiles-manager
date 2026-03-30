@@ -37,9 +37,14 @@ const i18n = {
         'general': 'General',
         'default_browser': 'Default Browser',
         'profile_storage': 'Profile storage path',
+        'change': 'Change',
+        'appearance': 'Appearance',
+        'theme': 'Theme',
+        'language': 'Language',
         'mcp_server': 'MCP Server',
         'mcp_hint': "ℹ️ Add this to your AI IDE's MCP config (Claude Code, Cursor, etc.)",
         'data': 'Data',
+        'open_config': 'Open config folder',
         'export_all': 'Export all profiles',
         'reset_settings': 'Reset all settings',
         // Create modal
@@ -123,9 +128,14 @@ const i18n = {
         'general': 'Chung',
         'default_browser': 'Trình duyệt mặc định',
         'profile_storage': 'Đường dẫn lưu profile',
+        'change': 'Đổi',
+        'appearance': 'Giao diện',
+        'theme': 'Chủ đề',
+        'language': 'Ngôn ngữ',
         'mcp_server': 'MCP Server',
         'mcp_hint': 'ℹ️ Thêm cấu hình này vào AI IDE (Claude Code, Cursor, v.v.)',
         'data': 'Dữ liệu',
+        'open_config': 'Mở thư mục cấu hình',
         'export_all': 'Xuất tất cả profiles',
         'reset_settings': 'Đặt lại cài đặt',
         // Create modal
@@ -317,7 +327,6 @@ async function openSettings() {
         const settings = await callGo('GetSettings');
         if (settings) {
             document.getElementById('settings-profiles-dir').textContent = settings.profiles_dir;
-            document.getElementById('settings-version').textContent = `v${settings.version}`;
 
             // Populate browser dropdown with current selection
             const select = document.getElementById('settings-browser');
@@ -326,7 +335,20 @@ async function openSettings() {
                     `<option value="${escapeAttr(b.id)}" ${b.id === settings.default_browser ? 'selected' : ''}>${escapeHtml(b.name)}</option>`
                 ).join('');
             }
+
+            // About section
+            document.getElementById('about-version').textContent = `v${settings.version}`;
+            const commitShort = settings.commit && settings.commit !== 'none'
+                ? settings.commit.substring(0, 7) : 'none';
+            document.getElementById('about-commit').textContent = commitShort;
+            document.getElementById('about-date').textContent = settings.build_date || 'unknown';
+            document.getElementById('about-config-dir').textContent = settings.config_dir || '~/.config/bpm';
         }
+
+        // Sync theme radio state
+        syncRadioGroup('settings-theme-group', currentTheme);
+        // Sync language radio state
+        syncRadioGroup('settings-lang-group', currentLang);
 
         // Load MCP config
         const mcpConfig = await callGo('GetMCPConfig');
@@ -334,6 +356,14 @@ async function openSettings() {
     } catch (err) {
         console.error('Failed to load settings:', err);
     }
+}
+
+function syncRadioGroup(groupId, activeValue) {
+    const group = document.getElementById(groupId);
+    if (!group) return;
+    group.querySelectorAll('.settings-radio-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === activeValue);
+    });
 }
 
 // ============================================
@@ -503,6 +533,8 @@ function bindEvents() {
     document.getElementById('btn-copy-mcp').addEventListener('click', handleCopyMCP);
     document.getElementById('btn-export-all').addEventListener('click', handleExportAll);
     document.getElementById('btn-reset-settings').addEventListener('click', handleResetSettings);
+    document.getElementById('btn-open-config').addEventListener('click', handleOpenConfig);
+    document.getElementById('btn-change-profiles-dir').addEventListener('click', handleChangeProfilesDir);
 
     document.getElementById('settings-browser').addEventListener('change', async (e) => {
         try {
@@ -511,6 +543,24 @@ function bindEvents() {
         } catch (err) {
             showToast(err, 'error');
         }
+    });
+
+    // Appearance: Theme radio group in settings
+    document.getElementById('settings-theme-group').addEventListener('click', (e) => {
+        const btn = e.target.closest('.settings-radio-btn');
+        if (!btn) return;
+        const newTheme = btn.dataset.value;
+        setTheme(newTheme);
+        syncRadioGroup('settings-theme-group', newTheme);
+    });
+
+    // Appearance: Language radio group in settings
+    document.getElementById('settings-lang-group').addEventListener('click', (e) => {
+        const btn = e.target.closest('.settings-radio-btn');
+        if (!btn) return;
+        const lang = btn.dataset.value;
+        setLanguage(lang);
+        syncRadioGroup('settings-lang-group', lang);
     });
 
     // Search filter
@@ -835,9 +885,29 @@ async function handleExportAll() {
 async function handleResetSettings() {
     if (!confirm('Reset all settings to defaults? This will not delete profiles.')) return;
     try {
-        await callGo('SaveDefaultBrowser', '');
+        await callGo('ResetSettings');
         showToast(t('settings_reset'), 'success');
         await openSettings();
+    } catch (err) {
+        showToast(err, 'error');
+    }
+}
+
+async function handleOpenConfig() {
+    try {
+        await callGo('OpenConfigDir');
+    } catch (err) {
+        showToast(err, 'error');
+    }
+}
+
+async function handleChangeProfilesDir() {
+    try {
+        const newDir = await callGo('ChangeProfilesDir');
+        if (newDir) {
+            document.getElementById('settings-profiles-dir').textContent = newDir;
+            showToast('Profile storage path updated', 'success');
+        }
     } catch (err) {
         showToast(err, 'error');
     }
@@ -960,12 +1030,22 @@ function applyLanguage(lang) {
         'settings-general': () => setCardTitle(0, t('general')),
         'settings-browser-label': () => setLabel('settings-browser', t('default_browser')),
         'settings-storage-label': () => {
-            const labels = document.querySelectorAll('#page-settings .settings-card .form-group label');
+            const labels = document.querySelectorAll('#page-settings .settings-card:first-of-type .form-group label');
             if (labels[1]) labels[1].textContent = t('profile_storage');
         },
-        'settings-mcp-title': () => setCardTitle(1, t('mcp_server')),
+        'settings-appearance': () => setCardTitle(1, t('appearance')),
+        'settings-theme-label': () => {
+            const card = document.querySelectorAll('#page-settings .settings-card')[1];
+            if (card) { const labels = card.querySelectorAll('.form-group label'); if (labels[0]) labels[0].textContent = t('theme'); }
+        },
+        'settings-lang-label': () => {
+            const card = document.querySelectorAll('#page-settings .settings-card')[1];
+            if (card) { const labels = card.querySelectorAll('.form-group label'); if (labels[1]) labels[1].textContent = t('language'); }
+        },
+        'settings-mcp-title': () => setCardTitle(2, t('mcp_server')),
         'settings-mcp-hint': () => setText('.settings-hint', t('mcp_hint')),
-        'settings-data-title': () => setCardTitle(2, t('data')),
+        'settings-data-title': () => setCardTitle(3, t('data')),
+        'btn-open-config': () => setInnerAfterIcon('btn-open-config', t('open_config')),
         'btn-export-all': () => setInnerAfterIcon('btn-export-all', t('export_all')),
         'btn-reset-settings': () => setInnerAfterIcon('btn-reset-settings', t('reset_settings')),
         // Create modal

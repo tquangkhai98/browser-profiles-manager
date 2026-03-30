@@ -10,9 +10,10 @@ import (
 
 // Config is the top-level bpm configuration persisted to config.json.
 type Config struct {
-	DefaultBrowser string    `json:"default_browser"`
-	Profiles       []Profile `json:"profiles"`
-	Mappings       []Mapping `json:"mappings"`
+	DefaultBrowser    string    `json:"default_browser"`
+	CustomProfilesDir string    `json:"custom_profiles_dir,omitempty"`
+	Profiles          []Profile `json:"profiles"`
+	Mappings          []Mapping `json:"mappings"`
 }
 
 // Profile represents a single isolated browser profile.
@@ -79,7 +80,12 @@ func DataDir() (string, error) {
 }
 
 // ProfilesDir returns the directory where all profile data directories live.
+// If a custom directory is configured, it takes priority.
 func ProfilesDir() (string, error) {
+	cfg, err := Load()
+	if err == nil && cfg.CustomProfilesDir != "" {
+		return cfg.CustomProfilesDir, nil
+	}
 	dataDir, err := DataDir()
 	if err != nil {
 		return "", err

@@ -9,6 +9,13 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
 )
 
+// Build-time variables injected via ldflags.
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 //go:embed all:frontend
 var assets embed.FS
 
@@ -17,6 +24,7 @@ var icon []byte
 
 func main() {
 	app := NewApp()
+	app.SetBuildInfo(version, commit, date)
 
 	err := wails.Run(&options.App{
 		Title:     "BPM — Browser Profiles Manager",

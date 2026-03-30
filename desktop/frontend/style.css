@@ -670,6 +670,36 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
     color: var(--on-surface-variant);
 }
 
+.settings-path span {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.btn-path-change {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--primary);
+    font-family: var(--font);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btn-path-change:hover {
+    background: var(--primary-dim);
+    border-color: var(--primary);
+}
+
 .mcp-code-block {
     position: relative;
     background: var(--surface-container-lowest);
@@ -712,12 +742,77 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
     flex-wrap: wrap;
 }
 
-.settings-version {
-    text-align: center;
-    padding: 20px;
-    font-size: 0.6875rem;
-    color: var(--text-muted);
+/* Settings Radio Group (Theme, Language) */
+.settings-radio-group {
+    display: flex;
+    gap: 8px;
+}
+
+.settings-radio-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 14px;
+    background: var(--surface-container-highest);
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 0.75rem;
     font-weight: 500;
+    color: var(--on-surface-variant);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.settings-radio-btn:hover {
+    background: var(--surface-bright);
+}
+
+.settings-radio-btn.active {
+    background: var(--primary-dim);
+    color: var(--primary);
+    border-color: rgba(99, 102, 241, 0.35);
+    font-weight: 600;
+}
+
+/* About Section */
+.settings-about {
+    margin: 0 24px 24px;
+    padding: 16px 20px;
+    background: var(--surface-container-low);
+    border-radius: var(--radius);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+}
+
+.about-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.about-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    min-width: 52px;
+}
+
+.about-value {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--on-surface-variant);
+}
+
+.about-mono {
+    font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+    font-size: 0.6875rem;
+    color: var(--primary);
 }
 
 /* ============================================
