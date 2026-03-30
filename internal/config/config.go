@@ -31,9 +31,13 @@ type Mapping struct {
 }
 
 // ConfigDir returns the platform-specific config directory.
+// Respects BPM_CONFIG_DIR env override (useful for testing).
 //   - macOS/Linux: ~/.config/bpm/
 //   - Windows:     %APPDATA%\bpm\
 func ConfigDir() (string, error) {
+	if dir := os.Getenv("BPM_CONFIG_DIR"); dir != "" {
+		return dir, nil
+	}
 	switch runtime.GOOS {
 	case "windows":
 		appData := os.Getenv("APPDATA")
@@ -51,9 +55,13 @@ func ConfigDir() (string, error) {
 }
 
 // DataDir returns the platform-specific data directory for profile storage.
+// Respects BPM_DATA_DIR env override (useful for testing).
 //   - macOS/Linux: ~/.local/share/bpm/
 //   - Windows:     %LOCALAPPDATA%\bpm\
 func DataDir() (string, error) {
+	if dir := os.Getenv("BPM_DATA_DIR"); dir != "" {
+		return dir, nil
+	}
 	switch runtime.GOOS {
 	case "windows":
 		localAppData := os.Getenv("LOCALAPPDATA")
