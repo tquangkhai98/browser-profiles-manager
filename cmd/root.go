@@ -7,7 +7,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const version = "0.1.0"
+// Build-time variables injected via ldflags.
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
 
 var rootCmd = &cobra.Command{
 	Use:     "bpm",
@@ -18,6 +23,7 @@ var rootCmd = &cobra.Command{
 
 // Execute runs the root command.
 func Execute() {
+	rootCmd.SetVersionTemplate(fmt.Sprintf("bpm %s (commit: %s, built: %s)\n", version, commit, date))
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
