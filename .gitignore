@@ -9,7 +9,10 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
-build/
+
+# Build output (but keep Wails build assets)
+/build/
+desktop/build/bin/
 desktop/frontend/wailsjs/
 
 # Internal design docs (local-only)
