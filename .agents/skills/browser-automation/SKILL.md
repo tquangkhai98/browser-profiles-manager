@@ -43,11 +43,16 @@ Stable, official. Uses accessibility tree for reliable element interaction.
 
 ### 🥈 Chrome DevTools MCP — Debug & Inspect
 
-Connect to a running Chrome with remote debugging.
+Connect to a running Chrome with remote debugging. Launch the browser directly with the bpm profile path and a debug port flag.
 
 ```bash
-# Step 1: Launch with debug port
-bpm use lms-admin --debug-port=9222
+# Step 1: Find profile path
+bpm list  # shows profile name and data dir
+
+# Step 2: Launch Chrome manually with remote debugging
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --user-data-dir="$HOME/.local/share/bpm/profiles/lms-admin" \
+  --remote-debugging-port=9222
 ```
 
 ```json
@@ -130,8 +135,8 @@ MCP config for all roles:
 bpm create staging-qa
 bpm use staging-qa  # login once
 
-# CI agent runs E2E tests with auth
-bpm use staging-qa --headless
+# CI agent runs E2E tests with auth via Playwright MCP
+# (Playwright MCP handles headless mode internally)
 ```
 
 ### Web Scraping with Auth
@@ -160,11 +165,10 @@ bpm use erp-data-entry  # login to ERP
 
 ```
 # Default profile storage
-macOS:   ~/.local/share/bpm/profiles/<name>/
-Windows: %LOCALAPPDATA%\bpm\profiles\<name>\
+macOS/Linux: ~/.local/share/bpm/profiles/<name>/
+Windows:     %LOCALAPPDATA%\bpm\profiles\<name>\
 
-# Custom path via config
-bpm config set profiles-dir /path/to/custom/dir
+# Custom path: set custom_profiles_dir in ~/.config/bpm/config.json
 ```
 
 When configuring `--user-data-dir` in MCP configs, use the full path to the profile directory.

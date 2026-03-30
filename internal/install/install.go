@@ -74,7 +74,7 @@ func Install(ideID string) (*Result, error) {
 		}
 	}
 	if target == nil {
-		return nil, fmt.Errorf("unknown IDE %q. Supported: claude-code, claude-desktop, cursor, windsurf", ideID)
+		return nil, fmt.Errorf("unknown IDE %q. Supported: claude-code, claude-desktop, cursor, antigravity", ideID)
 	}
 
 	// Check if already configured

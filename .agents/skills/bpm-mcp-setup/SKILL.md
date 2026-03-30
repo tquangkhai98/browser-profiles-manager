@@ -1,6 +1,6 @@
 ---
 name: bpm-mcp-setup
-description: Setting up bpm MCP server in AI IDEs (Claude Code, Cursor, Antigravity, Windsurf). Configuration paths, installation commands, and troubleshooting.
+description: Setting up bpm MCP server in AI IDEs (Claude Code, Cursor, Antigravity). Configuration paths, installation commands, and troubleshooting.
 ---
 
 # BPM MCP Server Setup
@@ -44,9 +44,9 @@ go install github.com/tquangkhai98/browser-profiles-manager@latest
 ```bash
 # Install into a specific IDE's MCP config
 bpm install claude-code
+bpm install claude-desktop
 bpm install cursor
 bpm install antigravity
-bpm install windsurf
 
 # Check which IDEs are configured
 bpm install --list
@@ -77,19 +77,12 @@ bpm install --list
 | macOS | `~/.cursor/mcp.json` |
 | Windows | `%USERPROFILE%\.cursor\mcp.json` |
 
-### Antigravity (Gemini)
+### Antigravity
 
 | Platform | Config Path |
 |----------|-------------|
 | macOS | `~/.gemini/settings.json` |
 | Windows | `%USERPROFILE%\.gemini\settings.json` |
-
-### Windsurf
-
-| Platform | Config Path |
-|----------|-------------|
-| macOS | `~/.codeium/windsurf/mcp_config.json` |
-| Windows | `%USERPROFILE%\.codeium\windsurf\mcp_config.json` |
 
 ---
 
