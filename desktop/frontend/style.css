@@ -353,36 +353,32 @@ body *:not(input):not(textarea):not(select):not(pre):not(code) {
 
 /* Drag Handle */
 .drag-handle {
-    position: absolute;
-    top: 8px;
-    right: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
     border: none;
     border-radius: var(--radius-sm);
     background: transparent;
     color: var(--outline-variant);
     cursor: grab;
     transition: all var(--transition);
-    opacity: 0;
-    z-index: 2;
-}
-
-.profile-card:hover .drag-handle {
-    opacity: 1;
+    padding: 4px;
+    margin-right: 4px;
+    margin-left: -4px;
 }
 
 .drag-handle:hover {
-    background: var(--surface-container-high);
-    color: var(--on-surface-variant);
+    color: var(--primary);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .drag-handle:active {
     cursor: grabbing;
     color: var(--primary);
+    transform: scale(0.9);
 }
 
 .drag-handle svg {

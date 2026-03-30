@@ -413,6 +413,39 @@ func (a *App) GetMCPConfig() string {
 	return string(data)
 }
 
+// ReorderProfiles saves a new profile ordering.
+// names must contain exactly the same profile names as currently exist, in the desired order.
+func (a *App) ReorderProfiles(names []string) error {
+	cfg, unlock, err := config.LoadWithLock()
+	if err != nil {
+		return err
+	}
+	defer unlock()
+
+	if len(names) != len(cfg.Profiles) {
+		return fmt.Errorf("expected %d profile names, got %d", len(cfg.Profiles), len(names))
+	}
+
+	// Build lookup by name
+	byName := make(map[string]config.Profile, len(cfg.Profiles))
+	for _, p := range cfg.Profiles {
+		byName[p.Name] = p
+	}
+
+	// Rebuild in requested order
+	reordered := make([]config.Profile, 0, len(names))
+	for _, name := range names {
+		p, ok := byName[name]
+		if !ok {
+			return fmt.Errorf("profile %q not found", name)
+		}
+		reordered = append(reordered, p)
+	}
+
+	cfg.Profiles = reordered
+	return config.SaveWithLock(cfg)
+}
+
 // ExportAllProfiles exports all profiles to the selected directory.
 func (a *App) ExportAllProfiles() (string, error) {
 	dir, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{

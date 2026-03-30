@@ -455,15 +455,15 @@ function renderProfiles() {
 
         return `
             <div class="profile-card ${matchesSearch ? '' : 'filtered-out'}" data-name="${escapeHtml(p.name)}" data-index="${index}" draggable="false">
-                <button class="drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                        <circle cx="9" cy="5" r="1"/><circle cx="15" cy="5" r="1"/>
-                        <circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/>
-                        <circle cx="9" cy="19" r="1"/><circle cx="15" cy="19" r="1"/>
-                    </svg>
-                </button>
                 <div class="profile-card-header">
                     <div class="profile-name-wrap">
+                        <button class="drag-handle" title="Drag to reorder" aria-label="Drag to reorder">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="9" cy="5" r="2"/><circle cx="15" cy="5" r="2"/>
+                                <circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/>
+                                <circle cx="9" cy="19" r="2"/><circle cx="15" cy="19" r="2"/>
+                            </svg>
+                        </button>
                         <span class="status-dot ${statusClass}" title="${statusText}"></span>
                         <span class="profile-name">${escapeHtml(p.name)}</span>
                     </div>
