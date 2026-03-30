@@ -1,6 +1,8 @@
 # bpm — Browser Profiles Manager
 
+[![Release](https://img.shields.io/github/v/release/tquangkhai98/browser-profiles-manager?color=blue)](https://github.com/tquangkhai98/browser-profiles-manager/releases/latest)
 [![Build](https://github.com/tquangkhai98/browser-profiles-manager/actions/workflows/release.yml/badge.svg)](https://github.com/tquangkhai98/browser-profiles-manager/actions/workflows/release.yml)
+[![Go Report](https://goreportcard.com/badge/github.com/tquangkhai98/browser-profiles-manager)](https://goreportcard.com/report/github.com/tquangkhai98/browser-profiles-manager)
 [![Go](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go&logoColor=white)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)]()
@@ -354,3 +356,9 @@ browser-profiles-manager/
 ## License
 
 MIT
+
+---
+
+<p align="center">
+  If you find bpm useful, consider giving it a ⭐ — it helps others discover this project!
+</p>
