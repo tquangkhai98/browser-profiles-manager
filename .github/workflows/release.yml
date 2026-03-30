@@ -104,6 +104,8 @@ jobs:
             BPM-*
             bpm-*
           if-no-files-found: error
+          retention-days: 1
+          compression-level: 9
 
   release:
     name: Create Release
