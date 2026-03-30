@@ -6,7 +6,7 @@
 let profiles = [];
 let browsers = [];
 let refreshInterval = null;
-let currentPage = 'profiles'; // 'profiles' | 'settings'
+let currentPage = 'profiles'; // 'profiles' | 'settings' | 'ai'
 let lastProfileHash = '';
 let currentLang = localStorage.getItem('bpm-lang') || 'en';
 let currentTheme = localStorage.getItem('bpm-theme') || 'dark';
@@ -106,6 +106,25 @@ const i18n = {
         'imported': 'Imported profile "{name}"',
         'copy_failed': 'Failed to copy',
         'dark_only': 'Dark mode is the only theme',
+        // AI Integration
+        'ai_agent': 'AI Agent',
+        'ai_hero_badge': '✨ NEW — The missing link between AI agents and browser sessions',
+        'ai_hero_title': 'AI Agent Integration',
+        'ai_hero_tagline': 'Login once. Automate forever.',
+        'ai_hero_desc': 'Bridge the gap between your persistent browser profiles and modern AI orchestration. BPM allows your agents to bypass 2FA and login barriers by leveraging existing authenticated sessions through Model Context Protocol (MCP) endpoints.',
+        'ai_playwright_title': 'Playwright MCP',
+        'ai_playwright_desc': 'Stable, official Anthropic integration. Uses accessibility tree for reliable element interaction. Best for E2E testing and form automation.',
+        'ai_devtools_title': 'Chrome DevTools MCP',
+        'ai_devtools_desc': 'Connect to a running Chrome instance with remote debugging. DOM inspection, Network monitoring, and Console access in real-time.',
+        'ai_browseruse_title': 'Browser Use MCP',
+        'ai_browseruse_desc': 'AI-native browser automation — describe actions in plain language instead of CSS selectors. The most seamless integration for AI workflows.',
+        'ai_workflow_title': 'The Integration Workflow',
+        'ai_step_create': 'Create Profile',
+        'ai_step_login': 'Login Once',
+        'ai_step_agent': 'AI Agent Uses Session',
+        'ai_step_automate': 'Automate Forever',
+        'ai_comparison_title': 'Comparison',
+        'ai_warning': 'Never open the same profile in two browsers simultaneously — bpm uses file locks to prevent profile corruption.',
     },
     vi: {
         // Header
@@ -196,6 +215,25 @@ const i18n = {
         'src_dst_diff': 'Nguồn và đích phải khác nhau',
         'imported': 'Đã nhập profile "{name}"',
         'copy_failed': 'Sao chép thất bại',
+        // AI Integration
+        'ai_agent': 'AI Agent',
+        'ai_hero_badge': '✨ MỚI — Cầu nối giữa AI agent và phiên trình duyệt',
+        'ai_hero_title': 'Tích hợp AI Agent',
+        'ai_hero_tagline': 'Đăng nhập một lần. Tự động hoá mãi mãi.',
+        'ai_hero_desc': 'Kết nối browser profiles với AI. BPM cho phép AI agent sử dụng phiên đăng nhập sẵn có, bỏ qua 2FA và rào cản đăng nhập thông qua Model Context Protocol (MCP).',
+        'ai_playwright_title': 'Playwright MCP',
+        'ai_playwright_desc': 'Tích hợp chính thức từ Anthropic. Sử dụng cây trợ năng cho tương tác ổn định. Tốt nhất cho E2E testing và tự động hoá form.',
+        'ai_devtools_title': 'Chrome DevTools MCP',
+        'ai_devtools_desc': 'Kết nối tới Chrome đang chạy với remote debugging. Kiểm tra DOM, giám sát Network, và truy cập Console thời gian thực.',
+        'ai_browseruse_title': 'Browser Use MCP',
+        'ai_browseruse_desc': 'Tự động hoá trình duyệt bằng ngôn ngữ tự nhiên — mô tả hành động thay vì CSS selectors. Tích hợp liền mạch nhất cho AI.',
+        'ai_workflow_title': 'Quy trình tích hợp',
+        'ai_step_create': 'Tạo Profile',
+        'ai_step_login': 'Đăng nhập',
+        'ai_step_agent': 'AI Agent dùng phiên',
+        'ai_step_automate': 'Tự động hoá',
+        'ai_comparison_title': 'So sánh',
+        'ai_warning': 'Không mở cùng profile trên hai trình duyệt đồng thời — bpm dùng file lock để ngăn hư hại profile.',
     }
 };
 
@@ -316,9 +354,16 @@ function showPage(pageName) {
         target.classList.add('active');
     }
 
-    // Show/hide status bar on settings page
+    // Show/hide status bar on non-profiles pages
     document.getElementById('status-bar').style.display =
-        pageName === 'settings' ? 'none' : 'flex';
+        (pageName === 'settings' || pageName === 'ai') ? 'none' : 'flex';
+
+    // Toggle AI button active state
+    const aiBtn = document.getElementById('btn-ai-integration');
+    if (aiBtn) aiBtn.classList.toggle('active', pageName === 'ai');
+
+    // Re-render Lucide icons for AI page
+    if (pageName === 'ai') lucide.createIcons();
 }
 
 async function openSettings() {
@@ -468,11 +513,16 @@ function bindEvents() {
     // Header buttons
     document.getElementById('btn-create-header').addEventListener('click', openCreateModal);
     document.getElementById('btn-import-header').addEventListener('click', openImportModal);
+    document.getElementById('btn-ai-integration').addEventListener('click', () => {
+        if (currentPage === 'ai') showPage('profiles');
+        else showPage('ai');
+    });
     document.getElementById('btn-settings').addEventListener('click', () => {
         if (currentPage === 'settings') showPage('profiles');
         else openSettings();
     });
     document.getElementById('btn-back-settings').addEventListener('click', () => showPage('profiles'));
+    document.getElementById('btn-back-ai').addEventListener('click', () => showPage('profiles'));
     document.getElementById('btn-sync-header').addEventListener('click', openSyncModal);
 
     // Language dropdown toggle
@@ -588,6 +638,33 @@ function bindEvents() {
         if (e.key === 'Escape') {
             document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
         }
+    });
+
+    // AI Integration: Copy config buttons
+    document.querySelectorAll('.ai-copy-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const codeBlock = btn.closest('.ai-code-block');
+            const code = codeBlock.querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.classList.add('copied');
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.setAttribute('data-lucide', 'check');
+                    lucide.createIcons();
+                }
+                showToast(t('mcp_copied'), 'success');
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    if (icon) {
+                        icon.setAttribute('data-lucide', 'copy');
+                        lucide.createIcons();
+                    }
+                }, 2000);
+            }).catch(() => {
+                showToast(t('copy_failed'), 'error');
+            });
+        });
     });
 }
 
@@ -1096,6 +1173,27 @@ function applyLanguage(lang) {
         },
         'edit-cancel': () => setText('#modal-edit .btn-ghost', t('cancel')),
         'btn-edit-confirm': () => { const el = document.getElementById('btn-edit-confirm'); if (el) el.textContent = t('save'); },
+        // AI Integration page
+        'ai-btn-header': () => setInnerAfterIcon('btn-ai-integration', t('ai_agent')),
+        'ai-back-btn': () => setInnerAfterIcon('btn-back-ai', t('back')),
+        'ai-page-title': () => { const el = document.querySelector('#page-ai .settings-page-title'); if (el) el.textContent = t('ai_hero_title'); },
+        'ai-badge': () => setText('.ai-badge-text', t('ai_hero_badge')),
+        'ai-title': () => setText('.ai-hero-title', t('ai_hero_title')),
+        'ai-tagline': () => setText('.ai-hero-tagline', t('ai_hero_tagline')),
+        'ai-desc': () => setText('.ai-hero-desc', t('ai_hero_desc')),
+        'ai-playwright-title': () => setText('#ai-card-playwright .ai-card-title', t('ai_playwright_title')),
+        'ai-playwright-desc': () => setText('#ai-card-playwright .ai-card-desc', t('ai_playwright_desc')),
+        'ai-devtools-title': () => setText('#ai-card-devtools .ai-card-title', t('ai_devtools_title')),
+        'ai-devtools-desc': () => setText('#ai-card-devtools .ai-card-desc', t('ai_devtools_desc')),
+        'ai-browseruse-title': () => setText('#ai-card-browseruse .ai-card-title', t('ai_browseruse_title')),
+        'ai-browseruse-desc': () => setText('#ai-card-browseruse .ai-card-desc', t('ai_browseruse_desc')),
+        'ai-workflow-title': () => setText('.ai-workflow-section .ai-section-title', t('ai_workflow_title')),
+        'ai-step-1': () => { const labels = document.querySelectorAll('.ai-step-label'); if (labels[0]) labels[0].textContent = t('ai_step_create'); },
+        'ai-step-2': () => { const labels = document.querySelectorAll('.ai-step-label'); if (labels[1]) labels[1].textContent = t('ai_step_login'); },
+        'ai-step-3': () => { const labels = document.querySelectorAll('.ai-step-label'); if (labels[2]) labels[2].textContent = t('ai_step_agent'); },
+        'ai-step-4': () => { const labels = document.querySelectorAll('.ai-step-label'); if (labels[3]) labels[3].textContent = t('ai_step_automate'); },
+        'ai-comparison-title': () => setText('.ai-comparison-section .ai-section-title', t('ai_comparison_title')),
+        'ai-warning': () => setText('.ai-warning-box span', t('ai_warning')),
     };
 
     Object.values(map).forEach(fn => { try { fn(); } catch {} });

@@ -39,6 +39,9 @@
                 <i data-lucide="sun" class="icon-sm icon-sun"></i>
                 <i data-lucide="moon" class="icon-sm icon-moon"></i>
             </button>
+            <button class="btn btn-ai-header" id="btn-ai-integration" title="AI Agent Integration">
+                <i data-lucide="bot" class="icon-xs"></i> AI Agent
+            </button>
             <button class="btn btn-outline-header" id="btn-import-header"><i data-lucide="download" class="icon-xs"></i> Import</button>
             <button class="btn btn-primary btn-header" id="btn-create-header"><i data-lucide="plus" class="icon-xs"></i> Create Profile</button>
             <button class="header-icon-btn" id="btn-settings" title="Settings">
@@ -205,6 +208,218 @@
                 <span class="about-label">Config</span>
                 <span class="about-value about-mono" id="about-config-dir">~/.config/bpm</span>
             </div>
+        </div>
+    </div>
+
+    <!-- Page: AI Integration -->
+    <div id="page-ai" class="page" style="display:none;">
+        <div class="settings-back">
+            <button class="btn-back" id="btn-back-ai">
+                <i data-lucide="arrow-left" class="icon-xs"></i>
+                Back
+            </button>
+        </div>
+        <div class="ai-page-scroll">
+            <!-- Hero Section -->
+            <section class="ai-hero">
+                <div class="ai-hero-badge">
+                    <span class="ai-badge-glow"></span>
+                    <span class="ai-badge-text">✨ NEW — The missing link between AI agents and browser sessions</span>
+                </div>
+                <h1 class="ai-hero-title">AI Agent Integration</h1>
+                <p class="ai-hero-tagline">Login once. Automate forever.</p>
+                <p class="ai-hero-desc">
+                    Bridge the gap between your persistent browser profiles and modern AI orchestration.
+                    BPM allows your agents to bypass 2FA and login barriers by leveraging existing
+                    authenticated sessions through Model Context Protocol (MCP) endpoints.
+                </p>
+            </section>
+
+            <!-- 3 Tool Cards -->
+            <section class="ai-cards-section">
+                <!-- Card 1: Playwright MCP -->
+                <div class="ai-tool-card ai-card-recommended" id="ai-card-playwright">
+                    <div class="ai-card-header">
+                        <div class="ai-card-icon">🎭</div>
+                        <div class="ai-card-meta">
+                            <h3 class="ai-card-title">Playwright MCP</h3>
+                            <span class="ai-card-tag tag-recommended">RECOMMENDED</span>
+                        </div>
+                    </div>
+                    <p class="ai-card-desc">
+                        Stable, official Anthropic integration. Uses accessibility tree for reliable element
+                        interaction. Best for E2E testing and form automation.
+                    </p>
+                    <div class="ai-code-block">
+                        <pre><code>{
+  "mcpServers": {
+    "browser-admin": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--user-data-dir",
+        "~/.local/share/bpm/profiles/lms-admin"
+      ]
+    }
+  }
+}</code></pre>
+                        <button class="btn-copy ai-copy-btn" data-config="playwright" title="Copy config">
+                            <i data-lucide="copy" class="icon-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 2: Chrome DevTools MCP -->
+                <div class="ai-tool-card" id="ai-card-devtools">
+                    <div class="ai-card-header">
+                        <div class="ai-card-icon">🔧</div>
+                        <div class="ai-card-meta">
+                            <h3 class="ai-card-title">Chrome DevTools MCP</h3>
+                            <span class="ai-card-tag tag-advanced">ADVANCED</span>
+                        </div>
+                    </div>
+                    <p class="ai-card-desc">
+                        Connect to a running Chrome instance with remote debugging. DOM inspection,
+                        Network monitoring, and Console access in real-time.
+                    </p>
+                    <div class="ai-code-block ai-code-terminal">
+                        <pre><code>bpm use lms-admin --debug-port=9222</code></pre>
+                        <button class="btn-copy ai-copy-btn" data-config="devtools-cmd" title="Copy command">
+                            <i data-lucide="copy" class="icon-xs"></i>
+                        </button>
+                    </div>
+                    <div class="ai-code-block">
+                        <pre><code>{
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "chrome-devtools-mcp@latest",
+        "--browserUrl=http://127.0.0.1:9222"
+      ]
+    }
+  }
+}</code></pre>
+                        <button class="btn-copy ai-copy-btn" data-config="devtools" title="Copy config">
+                            <i data-lucide="copy" class="icon-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 3: Browser Use MCP -->
+                <div class="ai-tool-card" id="ai-card-browseruse">
+                    <div class="ai-card-header">
+                        <div class="ai-card-icon">🤖</div>
+                        <div class="ai-card-meta">
+                            <h3 class="ai-card-title">Browser Use MCP</h3>
+                            <span class="ai-card-tag tag-ai-native">AI-NATIVE</span>
+                        </div>
+                    </div>
+                    <p class="ai-card-desc">
+                        AI-native browser automation — describe actions in plain language instead of
+                        CSS selectors. The most seamless integration for AI workflows.
+                    </p>
+                    <div class="ai-code-block">
+                        <pre><code>{
+  "mcpServers": {
+    "browser-use": {
+      "command": "npx",
+      "args": [
+        "browser-use-mcp@latest",
+        "--user-data-dir",
+        "~/.local/share/bpm/profiles/lms-admin"
+      ]
+    }
+  }
+}</code></pre>
+                        <button class="btn-copy ai-copy-btn" data-config="browseruse" title="Copy config">
+                            <i data-lucide="copy" class="icon-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Workflow Diagram -->
+            <section class="ai-workflow-section">
+                <h2 class="ai-section-title">The Integration Workflow</h2>
+                <div class="ai-workflow-steps">
+                    <div class="ai-workflow-step">
+                        <div class="ai-step-icon"><i data-lucide="user-plus" class="icon-md"></i></div>
+                        <span class="ai-step-label">Create Profile</span>
+                    </div>
+                    <div class="ai-workflow-connector"><i data-lucide="chevron-right" class="icon-sm"></i></div>
+                    <div class="ai-workflow-step">
+                        <div class="ai-step-icon"><i data-lucide="log-in" class="icon-md"></i></div>
+                        <span class="ai-step-label">Login Once</span>
+                    </div>
+                    <div class="ai-workflow-connector"><i data-lucide="chevron-right" class="icon-sm"></i></div>
+                    <div class="ai-workflow-step">
+                        <div class="ai-step-icon"><i data-lucide="bot" class="icon-md"></i></div>
+                        <span class="ai-step-label">AI Agent Uses Session</span>
+                    </div>
+                    <div class="ai-workflow-connector"><i data-lucide="chevron-right" class="icon-sm"></i></div>
+                    <div class="ai-workflow-step ai-step-final">
+                        <div class="ai-step-icon"><i data-lucide="zap" class="icon-md"></i></div>
+                        <span class="ai-step-label">Automate Forever</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Comparison Table -->
+            <section class="ai-comparison-section">
+                <h2 class="ai-section-title">Comparison</h2>
+                <div class="ai-comparison-table-wrap">
+                    <table class="ai-comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Tool</th>
+                                <th>Session Persist</th>
+                                <th>AI Control</th>
+                                <th>Multi-Role</th>
+                                <th>Best For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Playwright MCP</strong></td>
+                                <td><span class="ai-check">✅</span></td>
+                                <td><span class="ai-check">✅</span></td>
+                                <td><span class="ai-check">✅</span></td>
+                                <td>E2E testing, form automation</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Chrome DevTools MCP</strong></td>
+                                <td><span class="ai-check">✅</span></td>
+                                <td><span class="ai-check">✅</span></td>
+                                <td><span class="ai-check">✅</span></td>
+                                <td>Debugging, network inspection</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Browser Use MCP</strong></td>
+                                <td><span class="ai-check">✅</span></td>
+                                <td><span class="ai-check">✅</span></td>
+                                <td><span class="ai-check">✅</span></td>
+                                <td>Natural language automation</td>
+                            </tr>
+                            <tr class="ai-row-dim">
+                                <td>bpm CLI only</td>
+                                <td><span class="ai-check">✅</span></td>
+                                <td><span class="ai-cross">❌</span></td>
+                                <td><span class="ai-check">✅</span></td>
+                                <td>Manual testing</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Warning Note -->
+            <section class="ai-warning-section">
+                <div class="ai-warning-box">
+                    <i data-lucide="alert-triangle" class="icon-sm"></i>
+                    <span>Never open the same profile in two browsers simultaneously — bpm uses file locks to prevent profile corruption.</span>
+                </div>
+            </section>
         </div>
     </div>
 
