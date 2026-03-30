@@ -8,72 +8,67 @@ on:
 permissions:
   contents: write
 
+env:
+  GO_MODULE: github.com/tquangkhai98/browser-profiles-manager
+
 jobs:
-  release-macos:
-    name: Build & Release (macOS)
-    runs-on: macos-latest
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            platform: darwin/universal
+            cli_build: universal
+          - os: windows-latest
+            platform: windows/amd64
+            cli_build: amd64
+
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
 
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
-      - name: Install create-dmg
-        run: brew install create-dmg
-
-      - name: Extract version info
+      - name: Extract version
         id: version
+        shell: bash
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
-          COMMIT=$(git rev-parse --short HEAD)
-          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "commit=${COMMIT}" >> $GITHUB_OUTPUT
-          echo "date=${DATE}" >> $GITHUB_OUTPUT
-          echo "Building ${VERSION} (${COMMIT}) at ${DATE}"
+          echo "Building ${VERSION}"
 
-      # ── CLI binaries ──
-      - name: Build CLI (arm64)
-        env:
-          GOARCH: arm64
+      # ── CLI ──
+      - name: Build CLI (macOS universal)
+        if: runner.os == 'macOS'
+        shell: bash
         run: |
-          go build \
-            -ldflags "-s -w \
-              -X github.com/tquangkhai98/browser-profiles-manager/cmd.version=${{ steps.version.outputs.version }} \
-              -X github.com/tquangkhai98/browser-profiles-manager/cmd.commit=${{ steps.version.outputs.commit }} \
-              -X github.com/tquangkhai98/browser-profiles-manager/cmd.date=${{ steps.version.outputs.date }}" \
-            -o bpm-arm64 .
+          GOARCH=arm64 go build -ldflags "-s -w -X $GO_MODULE/cmd.version=${{ steps.version.outputs.version }}" -o bpm-arm64 .
+          GOARCH=amd64 go build -ldflags "-s -w -X $GO_MODULE/cmd.version=${{ steps.version.outputs.version }}" -o bpm-amd64 .
+          lipo -create -output bpm bpm-arm64 bpm-amd64
 
-      - name: Build CLI (amd64)
-        env:
-          GOARCH: amd64
-        run: |
-          go build \
-            -ldflags "-s -w \
-              -X github.com/tquangkhai98/browser-profiles-manager/cmd.version=${{ steps.version.outputs.version }} \
-              -X github.com/tquangkhai98/browser-profiles-manager/cmd.commit=${{ steps.version.outputs.commit }} \
-              -X github.com/tquangkhai98/browser-profiles-manager/cmd.date=${{ steps.version.outputs.date }}" \
-            -o bpm-amd64 .
+      - name: Build CLI (Windows)
+        if: runner.os == 'Windows'
+        run: go build -ldflags "-s -w -X ${{ env.GO_MODULE }}/cmd.version=${{ steps.version.outputs.version }}" -o bpm.exe .
 
-      - name: Create CLI universal binary
-        run: lipo -create -output bpm bpm-arm64 bpm-amd64
-
-      # ── Desktop: Universal build ──
-      - name: Build Desktop app (universal)
+      # ── Desktop ──
+      - name: Build Desktop app
         working-directory: desktop
-        run: wails build -platform darwin/universal
+        run: wails build -platform ${{ matrix.platform }}
 
-      - name: Create DMG (Universal)
+      # ── Package (macOS) ──
+      - name: Package macOS
+        if: runner.os == 'macOS'
         run: |
           VERSION=${{ steps.version.outputs.version }}
+          brew install create-dmg
           create-dmg \
             --volname "BPM" \
             --volicon "desktop/build/appicon.png" \
@@ -84,49 +79,45 @@ jobs:
             --app-drop-link 500 190 \
             --hide-extension "BPM.app" \
             --no-internet-enable \
-            "BPM-${VERSION}-darwin-universal.dmg" \
+            "BPM-${VERSION}-macos-universal.dmg" \
             "desktop/build/bin/BPM.app"
+          tar -czf bpm-${VERSION}-macos-universal.tar.gz bpm
 
-      # ── Desktop: x86_64 build ──
-      - name: Build Desktop app (x86_64)
-        working-directory: desktop
-        run: |
-          rm -rf build/bin
-          wails build -platform darwin/amd64
-
-      - name: Create DMG (x86_64)
+      # ── Package (Windows) ──
+      - name: Package Windows
+        if: runner.os == 'Windows'
+        shell: bash
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          create-dmg \
-            --volname "BPM" \
-            --volicon "desktop/build/appicon.png" \
-            --window-pos 200 120 \
-            --window-size 660 400 \
-            --icon-size 120 \
-            --icon "BPM.app" 160 190 \
-            --app-drop-link 500 190 \
-            --hide-extension "BPM.app" \
-            --no-internet-enable \
-            "BPM-${VERSION}-darwin-x86_64.dmg" \
-            "desktop/build/bin/BPM.app"
+          7z a BPM-${VERSION}-windows-amd64.zip ./desktop/build/bin/BPM.exe
+          7z a bpm-${VERSION}-windows-amd64.zip ./bpm.exe
 
-      # ── Package CLI ──
-      - name: Package CLI binaries
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          tar -czf bpm-${VERSION}-darwin-universal.tar.gz bpm
-          tar -czf bpm-${VERSION}-darwin-x86_64.tar.gz bpm-amd64
+      # ── Upload artifacts ──
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ runner.os }}
+          path: |
+            BPM-*
+            bpm-*
+          if-no-files-found: error
 
-      # ── Checksums & Release ──
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
       - name: Generate checksums
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          shasum -a 256 \
-            BPM-${VERSION}-darwin-universal.dmg \
-            BPM-${VERSION}-darwin-x86_64.dmg \
-            bpm-${VERSION}-darwin-universal.tar.gz \
-            bpm-${VERSION}-darwin-x86_64.tar.gz \
-            > checksums-${VERSION}-darwin.txt
+        run: sha256sum BPM-* bpm-* > checksums.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -136,32 +127,24 @@ jobs:
           body: |
             ## BPM ${{ steps.version.outputs.version }}
 
-            ### Downloads (macOS)
+            ### Downloads
 
-            | File | Arch | Description |
-            |------|------|-------------|
-            | `BPM-${{ steps.version.outputs.version }}-darwin-universal.dmg` | Universal | 🖥️ Desktop app (Apple Silicon + Intel) |
-            | `BPM-${{ steps.version.outputs.version }}-darwin-x86_64.dmg` | Intel x86_64 | 🖥️ Desktop app (Intel only) |
-            | `bpm-${{ steps.version.outputs.version }}-darwin-universal.tar.gz` | Universal | ⌨️ CLI binary |
-            | `bpm-${{ steps.version.outputs.version }}-darwin-x86_64.tar.gz` | Intel x86_64 | ⌨️ CLI binary |
+            | File | Platform | Description |
+            |------|----------|-------------|
+            | `BPM-...-macos-universal.dmg` | macOS (Universal) | 🖥️ Desktop app |
+            | `BPM-...-windows-amd64.zip` | Windows x64 | 🖥️ Desktop app |
+            | `bpm-...-macos-universal.tar.gz` | macOS (Universal) | ⌨️ CLI |
+            | `bpm-...-windows-amd64.zip` | Windows x64 | ⌨️ CLI |
 
             ### Installation
 
-            **Desktop:**
-            1. Download the `.dmg` file matching your Mac architecture
-            2. Open it and drag **BPM** to **Applications**
-            3. On first launch: **System Settings → Privacy & Security → Open Anyway**
+            **macOS:** Open `.dmg`, drag **BPM** to **Applications**.
+            First launch → **System Settings → Privacy & Security → Open Anyway**.
 
-            **CLI:**
-            ```bash
-            tar -xzf bpm-${{ steps.version.outputs.version }}-darwin-universal.tar.gz
-            sudo mv bpm /usr/local/bin/
-            ```
+            **Windows:** Extract `.zip` and run `BPM.exe`.
 
-            > 💡 **Universal** builds run natively on both Apple Silicon and Intel Macs.
+            **CLI:** Extract and add to your PATH.
           files: |
-            BPM-${{ steps.version.outputs.version }}-darwin-universal.dmg
-            BPM-${{ steps.version.outputs.version }}-darwin-x86_64.dmg
-            bpm-${{ steps.version.outputs.version }}-darwin-universal.tar.gz
-            bpm-${{ steps.version.outputs.version }}-darwin-x86_64.tar.gz
-            checksums-${{ steps.version.outputs.version }}-darwin.txt
+            BPM-*
+            bpm-*
+            checksums.txt
