@@ -1,7 +1,7 @@
 # bpm — Browser Profiles Manager
 
-[![Build](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white)]()
+[![Build](https://github.com/tquangkhai98/browser-profiles-manager/actions/workflows/release.yml/badge.svg)](https://github.com/tquangkhai98/browser-profiles-manager/actions/workflows/release.yml)
+[![Go](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go&logoColor=white)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)]()
 
@@ -43,8 +43,11 @@ AI IDEs spawn their own Chromium instances with ephemeral profiles:
 ## Quick Start
 
 ```bash
-# Install
+# Install (requires Go 1.24+)
 go install github.com/tquangkhai98/browser-profiles-manager@latest
+
+# Or download a pre-built binary from GitHub Releases:
+# https://github.com/tquangkhai98/browser-profiles-manager/releases
 
 # Create a profile
 bpm create work-staging
@@ -148,9 +151,13 @@ Stable, official, uses accessibility tree for reliable element interaction.
 
 Connect to a running Chrome instance launched by bpm. Provides DOM inspection, Network monitoring, and Console access.
 
+First launch Chrome manually with remote debugging enabled:
+
 ```bash
-# Launch browser with remote debugging
-bpm use lms-admin --debug-port=9222
+# macOS example — launch Chrome with remote debugging on port 9222
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+  --user-data-dir="$(bpm list --json | jq -r '.[] | select(.name=="lms-admin") | .path')" \
+  --remote-debugging-port=9222
 ```
 
 ```json
@@ -287,7 +294,7 @@ When you login to GitHub in one browser profile, that login is stored as cookies
 
 | Tool | Version | Install |
 |------|---------|---------|
-| Go | ≥ 1.25 | `brew install go` |
+| Go | ≥ 1.24 | `brew install go` |
 | Wails CLI | v2 | `go install github.com/wailsapp/wails/v2/cmd/wails@latest` |
 | Node.js | ≥ 18 | `brew install node` (for desktop frontend) |
 
@@ -343,11 +350,6 @@ browser-profiles-manager/
 | Linux | 🔜 Planned |
 
 ---
-
-## Documentation
-
-- [PLAN.md](PLAN.md) — Technical implementation plan
-- [docs/PRD.md](docs/PRD.md) — Product requirements document
 
 ## License
 
