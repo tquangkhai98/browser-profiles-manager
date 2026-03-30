@@ -1,12 +1,15 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/credential"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/profile"
 )
+
+var syncJSON bool
 
 var syncCmd = &cobra.Command{
 	Use:   "sync <source> <target>",
@@ -26,11 +29,23 @@ var syncCmd = &cobra.Command{
 			return fmt.Errorf("target profile: %w", err)
 		}
 
-		fmt.Printf("Syncing credentials: %s → %s\n", srcName, dstName)
+		if !syncJSON {
+			fmt.Printf("Syncing credentials: %s → %s\n", srcName, dstName)
+		}
 
 		copied, err := credential.Sync(src.DataDir, dst.DataDir)
 		if err != nil {
 			return err
+		}
+
+		if syncJSON {
+			data, _ := json.MarshalIndent(map[string]any{
+				"source":       srcName,
+				"target":       dstName,
+				"files_copied": copied,
+			}, "", "  ")
+			fmt.Println(string(data))
+			return nil
 		}
 
 		fmt.Printf("✓ Synced %d credential file(s)\n", copied)
@@ -39,5 +54,6 @@ var syncCmd = &cobra.Command{
 }
 
 func init() {
+	syncCmd.Flags().BoolVar(&syncJSON, "json", false, "Output in JSON format")
 	rootCmd.AddCommand(syncCmd)
 }

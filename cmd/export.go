@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/profile"
 )
+
+var exportJSON bool
 
 var exportCmd = &cobra.Command{
 	Use:   "export <name> <path>",
@@ -20,9 +23,22 @@ var exportCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("Exporting profile %q → %s...\n", name, dstPath)
+		if !exportJSON {
+			fmt.Printf("Exporting profile %q → %s...\n", name, dstPath)
+		}
+
 		if err := copyDir(p.DataDir, dstPath); err != nil {
 			return fmt.Errorf("export failed: %w", err)
+		}
+
+		if exportJSON {
+			data, _ := json.MarshalIndent(map[string]any{
+				"profile":     name,
+				"destination": dstPath,
+				"success":     true,
+			}, "", "  ")
+			fmt.Println(string(data))
+			return nil
 		}
 
 		fmt.Printf("✓ Exported profile %q to %s\n", name, dstPath)
@@ -31,5 +47,6 @@ var exportCmd = &cobra.Command{
 }
 
 func init() {
+	exportCmd.Flags().BoolVar(&exportJSON, "json", false, "Output in JSON format")
 	rootCmd.AddCommand(exportCmd)
 }

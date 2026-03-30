@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/profile"
 )
+
+var statusJSON bool
 
 var statusCmd = &cobra.Command{
 	Use:   "status <name>",
@@ -21,6 +24,25 @@ var statusCmd = &cobra.Command{
 		}
 
 		locked, lockInfo := profile.IsLocked(p.DataDir)
+
+		if statusJSON {
+			result := map[string]any{
+				"name":       p.Name,
+				"browser":    p.Browser,
+				"data_dir":   p.DataDir,
+				"created_at": p.CreatedAt,
+				"locked":     locked,
+			}
+			if p.LastUsed != nil {
+				result["last_used_at"] = p.LastUsed
+			}
+			if lockInfo != nil {
+				result["lock_info"] = lockInfo
+			}
+			data, _ := json.MarshalIndent(result, "", "  ")
+			fmt.Println(string(data))
+			return nil
+		}
 
 		fmt.Printf("Profile: %s\n", p.Name)
 		fmt.Printf("Browser: %s\n", p.Browser)
@@ -45,5 +67,6 @@ var statusCmd = &cobra.Command{
 }
 
 func init() {
+	statusCmd.Flags().BoolVar(&statusJSON, "json", false, "Output in JSON format")
 	rootCmd.AddCommand(statusCmd)
 }

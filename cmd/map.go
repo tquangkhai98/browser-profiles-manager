@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -12,6 +13,7 @@ var (
 	mapList   bool
 	mapAuto   bool
 	mapRemove string
+	mapJSON   bool
 )
 
 var mapCmd = &cobra.Command{
@@ -54,6 +56,13 @@ func runMapList() error {
 	if err != nil {
 		return err
 	}
+
+	if mapJSON {
+		data, _ := json.MarshalIndent(mappings, "", "  ")
+		fmt.Println(string(data))
+		return nil
+	}
+
 	if len(mappings) == 0 {
 		fmt.Println("No mappings configured. Use: bpm map <dir> <profile>")
 		return nil
@@ -75,6 +84,17 @@ func runMapAuto() error {
 	if err != nil {
 		return err
 	}
+
+	if mapJSON {
+		result := map[string]string{"directory": cwd}
+		if profileName != "" {
+			result["profile"] = profileName
+		}
+		data, _ := json.MarshalIndent(result, "", "  ")
+		fmt.Println(string(data))
+		return nil
+	}
+
 	if profileName == "" {
 		fmt.Printf("No profile mapped for %s\n", cwd)
 		fmt.Println("Use: bpm map <dir> <profile> to create a mapping")
@@ -97,5 +117,6 @@ func init() {
 	mapCmd.Flags().BoolVar(&mapList, "list", false, "Show all directory → profile mappings")
 	mapCmd.Flags().BoolVar(&mapAuto, "auto", false, "Auto-resolve profile for current directory")
 	mapCmd.Flags().StringVar(&mapRemove, "remove", "", "Remove mapping for directory")
+	mapCmd.Flags().BoolVar(&mapJSON, "json", false, "Output in JSON format (with --list or --auto)")
 	rootCmd.AddCommand(mapCmd)
 }
