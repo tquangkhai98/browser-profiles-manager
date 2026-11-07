@@ -24,7 +24,10 @@ AI IDEs spawn their own Chromium instances with ephemeral profiles:
 | 🔄 No credential sync across tools | Each tool starts from scratch |
 | 📁 Profiles scattered across filesystem | Hard to audit, clean up, back up |
 
-**No existing tool solves this.** Browser MCP does automation, not profile management. AdsPower MCP is closed ecosystem. chrome-cli controls tabs, not profiles.
+**bpm is a profile provider for AI agents and testing** — real Chrome, no fingerprint spoofing.
+It composes with Playwright MCP / Chrome DevTools MCP rather than driving the browser itself.
+Anti-detect managers like [FoxProfile](https://github.com/chienbm98/foxprofile) exist for spoofed-fingerprint/proxy use cases;
+Chrome DevTools MCP's `--isolated` option covers throwaway profiles.
 
 ---
 
