@@ -86,3 +86,31 @@ func TestTraversal(t *testing.T) {
 		t.Fatal("accepted traversal")
 	}
 }
+
+func TestUnpackReportsExportedBrowser(t *testing.T) {
+	for _, ext := range []string{".tar.gz", ".zip"} {
+		t.Run(ext, func(t *testing.T) {
+			root := t.TempDir()
+			src := filepath.Join(root, "src")
+			put(t, src, "Default/Preferences", "{}")
+			archive := filepath.Join(root, "profile"+ext)
+			if _, err := Export(src, archive, "work", "brave"); err != nil {
+				t.Fatal(err)
+			}
+			dst := filepath.Join(root, "dst")
+			if err := os.Mkdir(dst, 0700); err != nil {
+				t.Fatal(err)
+			}
+			c, err := Unpack(archive, dst)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if c.Browser != "brave" {
+				t.Fatalf("Browser = %q, want brave", c.Browser)
+			}
+			if _, err := os.Stat(filepath.Join(dst, "bpm-export.json")); !os.IsNotExist(err) {
+				t.Fatalf("metadata must not be written into the profile: %v", err)
+			}
+		})
+	}
+}

@@ -18,6 +18,19 @@ var importName string
 var importJSON bool
 var nonAlphanumeric = regexp.MustCompile(`[^a-z0-9]+`)
 
+// knownBrowsers are the browser IDs bpm understands.
+var knownBrowsers = map[string]bool{"chrome": true, "chromium": true, "brave": true, "edge": true, "arc": true}
+
+// importBrowser keeps the browser recorded by bpm export: profile data such as
+// cookie encryption is browser-specific. Sources without (valid) metadata are
+// treated as Chrome profiles.
+func importBrowser(recorded string) string {
+	if knownBrowsers[recorded] {
+		return recorded
+	}
+	return "chrome"
+}
+
 func deriveName(src string) string {
 	n := strings.ToLower(filepath.Base(filepath.Clean(src)))
 	for _, ext := range []string{".tar.gz", ".tgz", ".zip"} {
@@ -57,7 +70,7 @@ var importCmd = &cobra.Command{Use: "import <path> [name]", Short: "Import a Chr
 	if err = transfer.Normalize(staging); err != nil {
 		return fmt.Errorf("import failed: %w", err)
 	}
-	p, err := profile.Create(name, "chrome")
+	p, err := profile.Create(name, importBrowser(counts.Browser))
 	if err != nil {
 		return err
 	}

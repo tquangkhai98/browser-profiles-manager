@@ -16,6 +16,10 @@ var useBrowser string
 var useHeadless bool
 var useCDPPort int
 
+// useStopTimeout bounds how long `bpm use` waits for the browser to exit after
+// forwarding SIGINT/SIGTERM before it kills the browser.
+const useStopTimeout = 10 * time.Second
+
 var useCmd = &cobra.Command{
 	Use:   "use <name>",
 	Short: "Launch browser with an isolated profile",
@@ -98,6 +102,15 @@ var useCmd = &cobra.Command{
 			fmt.Printf("\nReceived %s, cleaning up...\n", sig)
 			if proc.Process != nil {
 				proc.Process.Signal(syscall.SIGTERM)
+				// Keep the profile locked until the browser has really exited;
+				// releasing it earlier lets another launch race the exiting
+				// browser for the same user-data-dir.
+				select {
+				case <-doneCh:
+				case <-time.After(useStopTimeout):
+					_ = proc.Process.Kill()
+					<-doneCh
+				}
 			}
 			releaseLock()
 		}

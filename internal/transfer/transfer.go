@@ -19,7 +19,13 @@ import (
 type Counts struct {
 	Files int   `json:"files"`
 	Bytes int64 `json:"bytes"`
+	// Browser is the browser ID recorded in the archive's bpm-export.json,
+	// or empty when the source has no readable metadata.
+	Browser string `json:"-"`
 }
+
+// maxMetadataSize bounds how much of bpm-export.json is read.
+const maxMetadataSize = 64 << 10
 
 var excluded = map[string]bool{"Cache": true, "Code Cache": true, "GPUCache": true, "DawnCache": true, "DawnGraphiteCache": true, "DawnWebGPUCache": true, "ShaderCache": true, "GrShaderCache": true, "GraphiteDawnCache": true, "Crashpad": true, "Crash Reports": true, "BrowserMetrics": true, "DevToolsActivePort": true, ".bpm.lock": true, ".bpm.lock.guard": true, "component_crx_cache": true, "optimization_guide_hint_cache_store": true}
 
@@ -188,6 +194,14 @@ func write(dst, n string, dir bool, r io.Reader, c *Counts) error {
 		}
 	}
 	if n == "bpm-export.json" {
+		if !dir && r != nil {
+			var meta struct {
+				Browser string `json:"browser"`
+			}
+			if json.NewDecoder(io.LimitReader(r, maxMetadataSize)).Decode(&meta) == nil {
+				c.Browser = meta.Browser
+			}
+		}
 		return nil
 	}
 	p := filepath.Join(dst, filepath.FromSlash(n))

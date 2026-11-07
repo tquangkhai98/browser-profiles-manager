@@ -381,9 +381,10 @@ func (a *App) ResetSettings() error {
 	}
 	defer unlock()
 
+	// Directory mappings are user data tied to profiles, which are preserved;
+	// the confirmation dialog only promises a settings reset.
 	cfg.DefaultBrowser = ""
 	cfg.CustomProfilesDir = ""
-	cfg.Mappings = nil
 	return config.SaveWithLock(cfg)
 }
 

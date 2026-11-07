@@ -155,14 +155,25 @@ func Delete(name string, force bool) error {
 
 	p := cfg.Profiles[idx]
 
-	// Check if locked
-	locked, lockInfo := IsLocked(p.DataDir)
-	if locked && !force {
+	// Hold the profile guard across the check and the removal so a launch
+	// cannot start in between.
+	release, lockInfo, err := lockForMutation(p.DataDir, force)
+	if err != nil {
+		return fmt.Errorf("profile %q: %w", name, err)
+	}
+	if lockInfo != nil {
 		return fmt.Errorf("profile %q is locked by PID %d (%s). Use --force to delete anyway", name, lockInfo.PID, lockInfo.Caller)
+	}
+	if !holdGuardDuringMove {
+		release()
+	}
+	err = os.RemoveAll(p.DataDir)
+	if holdGuardDuringMove {
+		release()
 	}
 
 	// Remove data directory
-	if err := os.RemoveAll(p.DataDir); err != nil {
+	if err != nil {
 		if !force {
 			return fmt.Errorf("cannot remove profile directory: %w", err)
 		}
@@ -233,16 +244,27 @@ func Rename(oldName, newName string) error {
 		return fmt.Errorf("profile %q not found", oldName)
 	}
 
-	// Check not locked
-	locked, lockInfo := IsLocked(cfg.Profiles[idx].DataDir)
-	if locked {
+	// Hold the profile guard across the check and the move so a launch
+	// cannot start in between.
+	oldDir := cfg.Profiles[idx].DataDir
+	release, lockInfo, err := lockForMutation(oldDir, false)
+	if err != nil {
+		return fmt.Errorf("profile %q: %w", oldName, err)
+	}
+	if lockInfo != nil {
 		return fmt.Errorf("profile %q is locked by PID %d (%s). Close the browser first", oldName, lockInfo.PID, lockInfo.Caller)
+	}
+	if !holdGuardDuringMove {
+		release()
 	}
 
 	// Rename data directory
-	oldDir := cfg.Profiles[idx].DataDir
 	newDir := filepath.Join(filepath.Dir(oldDir), newName)
-	if err := os.Rename(oldDir, newDir); err != nil {
+	err = os.Rename(oldDir, newDir)
+	if holdGuardDuringMove {
+		release()
+	}
+	if err != nil {
 		return fmt.Errorf("cannot rename directory: %w", err)
 	}
 

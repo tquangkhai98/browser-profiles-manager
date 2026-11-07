@@ -71,7 +71,7 @@ func registerTools(s *server.MCPServer) {
 	s.AddTool(
 		mcp.NewTool("mapping_set",
 			mcp.WithDescription("Map a project directory to a browser profile"),
-			mcp.WithString("directory", mcp.Required(), mcp.Description("Project directory path")),
+			mcp.WithString("directory", mcp.Required(), mcp.Description("Absolute project directory path")),
 			mcp.WithString("profile", mcp.Required(), mcp.Description("Profile name to map to")),
 		),
 		handleMappingSet,
@@ -80,7 +80,7 @@ func registerTools(s *server.MCPServer) {
 	s.AddTool(
 		mcp.NewTool("mapping_get",
 			mcp.WithDescription("Resolve which profile is mapped to a directory"),
-			mcp.WithString("directory", mcp.Required(), mcp.Description("Directory to look up")),
+			mcp.WithString("directory", mcp.Required(), mcp.Description("Absolute directory path to look up")),
 		),
 		handleMappingGet,
 	)
