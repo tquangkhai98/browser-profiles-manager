@@ -1,6 +1,7 @@
 package credential
 
 import (
+	"database/sql"
 	"os"
 	"path/filepath"
 	"testing"
@@ -124,4 +125,53 @@ func mkdirAll(path string) error {
 
 func writeTestFile(path string, data []byte) error {
 	return os.WriteFile(path, data, 0600)
+}
+
+func TestInspect_ReadOnlyAndCounts(t *testing.T) {
+	tmpDir := t.TempDir()
+	if err := mkdirAll(filepath.Join(tmpDir, "Default")); err != nil {
+		t.Fatal(err)
+	}
+	dbPath := filepath.Join(tmpDir, "Default", "Cookies")
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`CREATE TABLE cookies (host_key TEXT); INSERT INTO cookies VALUES ('a.com'), ('a.com'), ('b.com')`); err != nil {
+		t.Fatal(err)
+	}
+	db.Close()
+	if err := os.Chmod(dbPath, 0400); err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := Inspect(tmpDir, "p")
+	if err != nil {
+		t.Fatalf("Inspect() error = %v", err)
+	}
+	if result.TotalCookies != 3 {
+		t.Errorf("TotalCookies = %d, want 3", result.TotalCookies)
+	}
+	// A read-only open must not create a journal next to the database.
+	if _, err := os.Stat(dbPath + "-journal"); !os.IsNotExist(err) {
+		t.Errorf("journal created by Inspect: %v", err)
+	}
+}
+
+func TestInspect_AllDatabasesFail(t *testing.T) {
+	tmpDir := t.TempDir()
+	if err := writeTestFile(filepath.Join(tmpDir, "Cookies"), []byte("not a sqlite database")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Inspect(tmpDir, "broken"); err == nil {
+		t.Fatal("expected error when every credential DB fails to open")
+	}
+}
+
+func TestReadOnlyDSN(t *testing.T) {
+	got := readOnlyDSN("/tmp/a b/Login Data")
+	want := "file:/tmp/a%20b/Login%20Data?mode=ro&immutable=1"
+	if got != want {
+		t.Errorf("readOnlyDSN = %q, want %q", got, want)
+	}
 }

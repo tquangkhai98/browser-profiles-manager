@@ -173,6 +173,11 @@ func Save(cfg *Config) error {
 		os.Remove(tmpPath)
 		return fmt.Errorf("cannot write temp file: %w", err)
 	}
+	if err := tmpFile.Sync(); err != nil {
+		tmpFile.Close()
+		os.Remove(tmpPath)
+		return fmt.Errorf("cannot sync temp file: %w", err)
+	}
 	if err := tmpFile.Close(); err != nil {
 		os.Remove(tmpPath)
 		return fmt.Errorf("cannot close temp file: %w", err)
@@ -181,6 +186,14 @@ func Save(cfg *Config) error {
 	if err := os.Rename(tmpPath, configPath); err != nil {
 		os.Remove(tmpPath)
 		return fmt.Errorf("cannot rename temp file to config: %w", err)
+	}
+
+	// Make the rename durable. Best effort; directories can't be fsynced on Windows.
+	if runtime.GOOS != "windows" {
+		if d, err := os.Open(dir); err == nil {
+			_ = d.Sync()
+			d.Close()
+		}
 	}
 
 	return nil

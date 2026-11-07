@@ -4,12 +4,14 @@ package credential
 
 import (
 	"bytes"
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/sha1"
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/pbkdf2"
 )
@@ -25,14 +27,23 @@ const (
 // chromeIV is a fixed 16-byte IV of space characters (0x20).
 var chromeIV = bytes.Repeat([]byte{0x20}, 16)
 
+// keychainTimeout bounds the Keychain lookup, which can block on a macOS
+// permission dialog.
+const keychainTimeout = 30 * time.Second
+
 // getChromeKeychainPassword retrieves the Chrome Safe Storage password from macOS Keychain.
 func getChromeKeychainPassword() (string, error) {
-	cmd := exec.Command("security", "find-generic-password",
+	ctx, cancel := context.WithTimeout(context.Background(), keychainTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "security", "find-generic-password",
 		"-s", "Chrome Safe Storage",
 		"-a", "Chrome",
 		"-w",
 	)
 	out, err := cmd.Output()
+	if ctx.Err() == context.DeadlineExceeded {
+		return "", fmt.Errorf("timed out after %s waiting for Keychain access to Chrome Safe Storage", keychainTimeout)
+	}
 	if err != nil {
 		return "", fmt.Errorf("cannot read Chrome Safe Storage from Keychain: %w (you may need to allow access)", err)
 	}

@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/spf13/cobra"
+	"github.com/tquangkhai98/browser-profiles-manager/internal/config"
 	mcpserver "github.com/tquangkhai98/browser-profiles-manager/internal/mcp"
 )
 
@@ -24,6 +26,11 @@ AI IDEs (Claude Code, Cursor, Antigravity) can connect by adding bpm to their MC
   }`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Honour the "MCP enabled" switch from the bpm settings.
+		if cfg, err := config.Load(); err == nil && !cfg.IsMCPEnabled() {
+			return errors.New("MCP disabled in bpm settings")
+		}
+
 		s := mcpserver.NewServer(version)
 
 		fmt.Fprintln(cmd.ErrOrStderr(), "bpm MCP server started (stdio)")

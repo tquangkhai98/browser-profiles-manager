@@ -10,12 +10,15 @@ import (
 	"github.com/tquangkhai98/browser-profiles-manager/internal/profile"
 )
 
-var deleteForce bool
+var (
+	deleteYes   bool
+	deleteForce bool
+)
 
 var deleteCmd = &cobra.Command{
 	Use:   "delete <name>",
 	Short: "Delete a browser profile and its data",
-	Long:  `Delete a browser profile, removing it from config and deleting its data directory. Use --force to skip confirmation and delete even if locked.`,
+	Long:  `Delete a browser profile, removing it from config and deleting its data directory. Use --yes to skip the confirmation prompt. Use --force to also delete a profile that is locked (in use); --force implies --yes.`,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
@@ -26,8 +29,8 @@ var deleteCmd = &cobra.Command{
 			return err
 		}
 
-		// Confirmation prompt unless --force
-		if !deleteForce {
+		// Confirmation prompt unless --yes or --force
+		if !deleteYes && !deleteForce {
 			fmt.Printf("Delete profile %q and all its data at %s?\n", name, p.DataDir)
 			fmt.Print("Type 'yes' to confirm: ")
 
@@ -49,6 +52,7 @@ var deleteCmd = &cobra.Command{
 }
 
 func init() {
-	deleteCmd.Flags().BoolVar(&deleteForce, "force", false, "Skip confirmation and delete even if locked")
+	deleteCmd.Flags().BoolVarP(&deleteYes, "yes", "y", false, "Skip the confirmation prompt (still refuses a locked profile)")
+	deleteCmd.Flags().BoolVar(&deleteForce, "force", false, "Delete even if the profile is locked (in use); implies --yes")
 	rootCmd.AddCommand(deleteCmd)
 }

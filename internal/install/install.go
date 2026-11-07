@@ -5,10 +5,12 @@ package install
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 // IDE represents a supported AI IDE.
@@ -95,7 +97,10 @@ func Install(ideID string) (*Result, error) {
 
 	// Add bpm entry
 	bpmPath := resolveBPMPath()
-	servers := getOrCreateServers(cfg)
+	servers, err := serversForWrite(cfg, target.ConfigPath)
+	if err != nil {
+		return nil, err
+	}
 	servers["bpm"] = map[string]interface{}{
 		"command": bpmPath,
 		"args":    []interface{}{"serve"},
@@ -143,7 +148,10 @@ func Uninstall(ideID string) (*Result, error) {
 		return nil, err
 	}
 
-	servers := getOrCreateServers(cfg)
+	servers, err := serversForWrite(cfg, target.ConfigPath)
+	if err != nil {
+		return nil, err
+	}
 	delete(servers, "bpm")
 	cfg["mcpServers"] = servers
 
@@ -226,9 +234,36 @@ func getOrCreateServers(cfg map[string]interface{}) map[string]interface{} {
 	return servers
 }
 
+// serversForWrite returns cfg's mcpServers map for modification. It refuses
+// to continue when mcpServers exists but is not a JSON object, so a value bpm
+// doesn't understand is never silently replaced.
+func serversForWrite(cfg map[string]interface{}, path string) (map[string]interface{}, error) {
+	raw, ok := cfg["mcpServers"]
+	if !ok || raw == nil {
+		return make(map[string]interface{}), nil
+	}
+	servers, ok := raw.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("%s: \"mcpServers\" is not a JSON object; fix it by hand before running bpm install", path)
+	}
+	return servers, nil
+}
+
+// writeConfig atomically replaces the IDE config at path with cfg.
+//
+// A symlinked config is written at its real target so dotfile-manager links
+// survive. An existing config is first copied to <real path>.bpm.bak. The new
+// file keeps the original file's permissions (0600 for a new file) and is
+// fsynced before the rename; the parent directory is fsynced afterwards.
 func writeConfig(path string, cfg map[string]interface{}) error {
-	// Ensure parent directory exists
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+	realPath, err := resolveConfigPath(path)
+	if err != nil {
+		return err
+	}
+	dir := filepath.Dir(realPath)
+
+	// Ensure the (real) parent directory exists
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
 	}
 
@@ -237,8 +272,18 @@ func writeConfig(path string, cfg map[string]interface{}) error {
 		return err
 	}
 
-	// Atomic write: temp file + rename
-	tmpFile, err := os.CreateTemp(filepath.Dir(path), ".bpm-mcp-*.json")
+	mode := os.FileMode(0600)
+	if info, err := os.Stat(realPath); err == nil {
+		mode = info.Mode().Perm()
+		if err := backupFile(realPath, realPath+".bpm.bak", mode); err != nil {
+			return fmt.Errorf("cannot back up %s: %w", realPath, err)
+		}
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+
+	// Atomic write: temp file + fsync + rename
+	tmpFile, err := os.CreateTemp(dir, ".bpm-mcp-*.json")
 	if err != nil {
 		return err
 	}
@@ -249,16 +294,112 @@ func writeConfig(path string, cfg map[string]interface{}) error {
 		os.Remove(tmpPath)
 		return err
 	}
+	if err := tmpFile.Chmod(mode); err != nil {
+		tmpFile.Close()
+		os.Remove(tmpPath)
+		return err
+	}
+	if err := tmpFile.Sync(); err != nil {
+		tmpFile.Close()
+		os.Remove(tmpPath)
+		return err
+	}
 	if err := tmpFile.Close(); err != nil {
 		os.Remove(tmpPath)
 		return err
 	}
 
-	return os.Rename(tmpPath, path)
+	if err := os.Rename(tmpPath, realPath); err != nil {
+		os.Remove(tmpPath)
+		return err
+	}
+	syncDir(dir)
+	return nil
 }
 
+// resolveConfigPath follows symlinks at path. A missing file resolves to
+// itself (with symlinks in its parent directory resolved when possible); a
+// dangling symlink resolves to the link's target.
+func resolveConfigPath(path string) (string, error) {
+	if real, err := filepath.EvalSymlinks(path); err == nil {
+		return real, nil
+	}
+	info, err := os.Lstat(path)
+	if os.IsNotExist(err) {
+		if parent, err := filepath.EvalSymlinks(filepath.Dir(path)); err == nil {
+			return filepath.Join(parent, filepath.Base(path)), nil
+		}
+		return path, nil
+	}
+	if err != nil {
+		return "", err
+	}
+	if info.Mode()&os.ModeSymlink == 0 {
+		return path, nil
+	}
+	// Dangling symlink: write where it points so the link becomes valid.
+	target, err := os.Readlink(path)
+	if err != nil {
+		return "", err
+	}
+	if !filepath.IsAbs(target) {
+		target = filepath.Join(filepath.Dir(path), target)
+	}
+	return target, nil
+}
+
+// backupFile copies src to dst (replacing dst) with the given mode.
+func backupFile(src, dst string, mode os.FileMode) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	out, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(out, in); err != nil {
+		out.Close()
+		return err
+	}
+	if err := out.Sync(); err != nil {
+		out.Close()
+		return err
+	}
+	return out.Close()
+}
+
+// syncDir fsyncs a directory so a rename into it is durable. Best effort;
+// skipped on Windows, where directories can't be opened for Sync.
+func syncDir(dir string) {
+	if runtime.GOOS == "windows" {
+		return
+	}
+	if d, err := os.Open(dir); err == nil {
+		_ = d.Sync()
+		d.Close()
+	}
+}
+
+// resolveBPMPath returns the absolute path of the bpm CLI to register as the
+// MCP command. It prefers the running binary when that is the bpm CLI (the
+// desktop app is a different binary and has no "serve" command), then bpm on
+// PATH, and only falls back to a bare "bpm" as a last resort.
 func resolveBPMPath() string {
+	if exe, err := os.Executable(); err == nil {
+		if real, err := filepath.EvalSymlinks(exe); err == nil {
+			exe = real
+		}
+		name := strings.TrimSuffix(strings.ToLower(filepath.Base(exe)), ".exe")
+		if name == "bpm" {
+			return exe
+		}
+	}
 	if resolved, err := exec.LookPath("bpm"); err == nil {
+		if abs, err := filepath.Abs(resolved); err == nil {
+			return abs
+		}
 		return resolved
 	}
 	return "bpm"
