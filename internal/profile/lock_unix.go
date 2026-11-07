@@ -41,3 +41,7 @@ func acquireFileLock(path string) (func(), error) {
 func processAliveResult(err error) bool {
 	return !errors.Is(err, syscall.ESRCH) && !errors.Is(err, os.ErrProcessDone)
 }
+
+// holdGuardDuringMove: Unix can remove or rename a directory while the guard
+// file inside it is open and locked.
+const holdGuardDuringMove = true

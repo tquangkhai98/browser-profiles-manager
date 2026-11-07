@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -28,6 +29,9 @@ func handleProfileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp
 			return mcp.NewToolResultError(err.Error()), nil
 		}
 		browserID = b.ID
+	} else if _, err := browser.FindBrowser(browserID); err != nil {
+		// Same validation as `bpm create --browser`.
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
 	p, err := profile.Create(name, browserID)
@@ -152,6 +156,11 @@ func handleMappingSet(ctx context.Context, request mcp.CallToolRequest) (*mcp.Ca
 	if err != nil {
 		return mcp.NewToolResultError("directory is required"), nil
 	}
+	// A relative path would be resolved against the MCP server's working
+	// directory, which is unrelated to the client's project.
+	if !filepath.IsAbs(dir) {
+		return mcp.NewToolResultError(fmt.Sprintf("directory must be an absolute path, got %q", dir)), nil
+	}
 
 	profileName, err := request.RequireString("profile")
 	if err != nil {
@@ -169,6 +178,11 @@ func handleMappingGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.Ca
 	dir, err := request.RequireString("directory")
 	if err != nil {
 		return mcp.NewToolResultError("directory is required"), nil
+	}
+	// A relative path would be resolved against the MCP server's working
+	// directory, which is unrelated to the client's project.
+	if !filepath.IsAbs(dir) {
+		return mcp.NewToolResultError(fmt.Sprintf("directory must be an absolute path, got %q", dir)), nil
 	}
 
 	profileName, err := mapping.Get(dir)

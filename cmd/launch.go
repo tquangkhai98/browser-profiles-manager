@@ -29,7 +29,11 @@ var launchCmd = &cobra.Command{
 			return json.NewEncoder(cmd.OutOrStdout()).Encode(launchResult(s))
 		}
 		fmt.Fprintf(cmd.OutOrStdout(), "Launched %s with profile %q (pid %d).\n", s.Browser, s.Profile, s.PID)
-		fmt.Fprintf(cmd.OutOrStdout(), "Headless mode: CDP endpoint %s\n", s.CDPHTTP)
+		if s.Headless {
+			fmt.Fprintf(cmd.OutOrStdout(), "Headless mode: CDP endpoint %s\n", s.CDPHTTP)
+		} else {
+			fmt.Fprintf(cmd.OutOrStdout(), "CDP endpoint %s\n", s.CDPHTTP)
+		}
 		return nil
 	},
 }

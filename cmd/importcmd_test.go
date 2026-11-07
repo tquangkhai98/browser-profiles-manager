@@ -69,3 +69,11 @@ func TestListJSONFreshProfile(t *testing.T) {
 		t.Fatalf("unexpected list: %s", data)
 	}
 }
+
+func TestImportBrowser(t *testing.T) {
+	for in, want := range map[string]string{"": "chrome", "brave": "brave", "edge": "edge", "arc": "arc", "chromium": "chromium", "../evil": "chrome", "firefox": "chrome"} {
+		if got := importBrowser(in); got != want {
+			t.Errorf("importBrowser(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

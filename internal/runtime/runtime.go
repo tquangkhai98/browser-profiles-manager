@@ -26,6 +26,9 @@ type State struct {
 	WebSocket string    `json:"webSocketDebuggerUrl"`
 	Headless  bool      `json:"headless"`
 	StartedAt time.Time `json:"started_at,omitempty"`
+	// ProcStart identifies the PID's process instance (Linux), so a reused PID
+	// is not mistaken for the browser. Zero means unknown.
+	ProcStart uint64 `json:"proc_start,omitempty"`
 }
 
 type Options struct {
@@ -58,7 +61,7 @@ func Read(name string) (*State, error) {
 	if err = json.Unmarshal(data, &s); err != nil {
 		return nil, err
 	}
-	if !profile.ProcessAlive(s.PID) {
+	if !profile.ProcessMatches(s.PID, s.ProcStart) {
 		if err = os.Remove(path); err != nil && !os.IsNotExist(err) {
 			return nil, err
 		}
@@ -145,9 +148,9 @@ func Launch(name string, opts Options) (*State, error) {
 	}()
 	port, ws, err := waitEndpoint(p.DataDir, opts.Port, 10*time.Second)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w (browser output: %s)", err, log.Name())
 	}
-	s := &State{Profile: name, Browser: id, PID: pid, Port: port, CDPHTTP: fmt.Sprintf("http://127.0.0.1:%d", port), WebSocket: ws, Headless: opts.Headless, StartedAt: time.Now().UTC()}
+	s := &State{Profile: name, Browser: id, PID: pid, Port: port, CDPHTTP: fmt.Sprintf("http://127.0.0.1:%d", port), WebSocket: ws, Headless: opts.Headless, StartedAt: time.Now().UTC(), ProcStart: profile.ProcessStartTime(pid)}
 	path, err := statePath(name)
 	if err != nil {
 		return nil, err
@@ -167,10 +170,12 @@ func Launch(name string, opts Options) (*State, error) {
 		return nil, err
 	}
 	held = false
-	if err = cmd.Process.Release(); err != nil {
-		return nil, err
-	}
 	failed = false
+	// Reap the browser when it exits. A short-lived `bpm launch` exits first
+	// and the browser is re-parented; a long-lived caller (the MCP server)
+	// would otherwise keep an unreaped zombie that still looks alive to
+	// kill(pid, 0), so the profile would stay "running" and locked.
+	go func() { _ = cmd.Wait() }()
 	_ = profile.UpdateLastUsed(name)
 	return s, nil
 }
@@ -178,12 +183,17 @@ func waitEndpoint(dir string, requested int, timeout time.Duration) (int, string
 	deadline := time.Now().Add(timeout)
 	client := &http.Client{Timeout: 500 * time.Millisecond}
 	for time.Now().Before(deadline) {
+		// Only trust DevToolsActivePort, which Launch removed before starting
+		// the browser: it is written by this browser once it has bound its
+		// port. Probing the requested port directly could return another
+		// process that already listens there (a fixed --cdp-port collision),
+		// in which case this browser never binds and never writes the file.
 		data, _ := os.ReadFile(filepath.Join(dir, "DevToolsActivePort"))
 		lines := strings.Split(strings.TrimSpace(string(data)), "\n")
-		port := requested
+		port := 0
 		path := ""
 		if len(lines) >= 2 {
-			if n, e := strconv.Atoi(strings.TrimSpace(lines[0])); e == nil && n > 0 && n <= 65535 {
+			if n, e := strconv.Atoi(strings.TrimSpace(lines[0])); e == nil && n > 0 && n <= 65535 && (requested == 0 || n == requested) {
 				port = n
 				path = strings.TrimSpace(lines[1])
 			}
@@ -219,33 +229,55 @@ func Stop(name string, timeout time.Duration) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	// Hold the guard for the whole stop. If another bpm process holds it, the
+	// lock PID is that bpm process (a launch still starting up, bpm use, the
+	// desktop app, export, creds sync), not a detached browser: signalling it
+	// would orphan a starting browser or kill an unrelated process group.
+	unlock, err := profile.HoldGuard(p.DataDir)
+	if err != nil {
+		if info := profile.LiveLock(p.DataDir); info != nil {
+			return false, fmt.Errorf("profile %q is held by pid %d (%s), not by a detached browser; stop that process instead", name, info.PID, info.Caller)
+		}
+		return false, fmt.Errorf("profile %q is busy: %w", name, err)
+	}
+	defer unlock()
 	s, err := Read(name)
 	if err != nil {
 		return false, err
 	}
-	pid := 0
+	pid, start := 0, uint64(0)
 	if s != nil {
-		pid = s.PID
-	} else if locked, info := profile.IsLocked(p.DataDir); locked {
-		pid = info.PID
+		pid, start = s.PID, s.ProcStart
+	} else if info := profile.LiveLock(p.DataDir); info != nil {
+		pid, start = info.PID, info.StartTime
 	}
 	if pid == 0 {
 		_ = profile.ReleaseLock(p.DataDir)
 		return false, nil
 	}
+	alive := func() bool { return profile.ProcessMatches(pid, start) }
 	// A group-wide SIGTERM prevents Chromium's graceful shutdown and can lose
 	// unflushed cookies and session state. Signal only the browser first; use
 	// SIGKILL on its group only if it remains alive after the timeout.
-	if err = signalProcess(pid); err != nil && profile.ProcessAlive(pid) {
+	if err = signalProcess(pid); err != nil && alive() {
 		return false, fmt.Errorf("cannot stop browser: %w", err)
 	}
-	start := time.Now()
-	for profile.ProcessAlive(pid) && !escalation(time.Since(start), timeout) {
-		time.Sleep(min(100*time.Millisecond, timeout-time.Since(start)))
+	start0 := time.Now()
+	for alive() && !escalation(time.Since(start0), timeout) {
+		time.Sleep(min(100*time.Millisecond, timeout-time.Since(start0)))
 	}
-	if profile.ProcessAlive(pid) {
-		if err = signalGroup(pid); err != nil && profile.ProcessAlive(pid) {
+	if alive() {
+		if err = signalGroup(pid); err != nil && alive() {
 			return false, err
+		}
+		// Do not release the profile while the killed browser still exists;
+		// a new launch would collide with its SingletonLock.
+		deadline := time.Now().Add(killWait)
+		for alive() && time.Now().Before(deadline) {
+			time.Sleep(50 * time.Millisecond)
+		}
+		if alive() {
+			return false, fmt.Errorf("browser pid %d did not exit after SIGKILL", pid)
 		}
 	}
 	path, err := statePath(name)
@@ -260,3 +292,6 @@ func Stop(name string, timeout time.Duration) (bool, error) {
 	}
 	return true, nil
 }
+
+// killWait bounds how long Stop waits for a SIGKILLed browser to disappear.
+const killWait = 3 * time.Second

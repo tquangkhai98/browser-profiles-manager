@@ -51,19 +51,23 @@ jobs:
           VERSION=${{ inputs.version }}
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "Building ${VERSION}"
+          # Same ldflags as the Makefile so `bpm --version` reports commit and date.
+          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "ldflags=-s -w -X $GO_MODULE/cmd.version=${VERSION} -X $GO_MODULE/cmd.commit=${GITHUB_SHA::7} -X $GO_MODULE/cmd.date=${DATE}" >> $GITHUB_OUTPUT
 
       # ── CLI ──
       - name: Build CLI (macOS universal)
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          GOARCH=arm64 go build -ldflags "-s -w -X $GO_MODULE/cmd.version=${{ steps.version.outputs.version }}" -o bpm-arm64 .
-          GOARCH=amd64 go build -ldflags "-s -w -X $GO_MODULE/cmd.version=${{ steps.version.outputs.version }}" -o bpm-amd64 .
+          GOARCH=arm64 go build -trimpath -ldflags "${{ steps.version.outputs.ldflags }}" -o bpm-arm64 .
+          GOARCH=amd64 go build -trimpath -ldflags "${{ steps.version.outputs.ldflags }}" -o bpm-amd64 .
           lipo -create -output bpm bpm-arm64 bpm-amd64
 
       - name: Build CLI (Windows)
         if: runner.os == 'Windows'
-        run: go build -ldflags "-s -w -X ${{ env.GO_MODULE }}/cmd.version=${{ steps.version.outputs.version }}" -o bpm.exe .
+        shell: bash
+        run: go build -trimpath -ldflags "${{ steps.version.outputs.ldflags }}" -o bpm.exe .
 
       - name: Build and package Linux CLI
         if: runner.os == 'Linux'
@@ -72,7 +76,7 @@ jobs:
           VERSION=${{ steps.version.outputs.version }}
           for arch in amd64 arm64; do
             mkdir -p "package-$arch"
-            CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath -ldflags "-s -w -X $GO_MODULE/cmd.version=$VERSION" -o "package-$arch/bpm" .
+            CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath -ldflags "${{ steps.version.outputs.ldflags }}" -o "package-$arch/bpm" .
             cp README.md "package-$arch/"
             if [ -f LICENSE ]; then cp LICENSE "package-$arch/"; fi
             tar -czf "bpm-${VERSION}-linux-${arch}.tar.gz" -C "package-$arch" .

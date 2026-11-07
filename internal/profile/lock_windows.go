@@ -84,3 +84,8 @@ func acquireFileLock(path string) (func(), error) {
 		f.Close()
 	}, nil
 }
+
+// holdGuardDuringMove: Windows cannot remove or rename a directory while a
+// handle to the guard file inside it is open, so the guard is dropped right
+// before the move.
+const holdGuardDuringMove = false
