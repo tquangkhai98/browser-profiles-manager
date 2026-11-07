@@ -3,9 +3,11 @@ package credential
 import (
 	"database/sql"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	_ "modernc.org/sqlite"
 )
@@ -34,12 +36,17 @@ type InspectResult struct {
 func Inspect(profileDir, profileName string) (*InspectResult, error) {
 	result := &InspectResult{ProfileName: profileName}
 	siteMap := make(map[string]*SiteCredential)
+	attempted, failed := 0, 0
+	var lastErr error
 
 	// Read cookies from all candidate locations
 	for _, cookieDB := range findAllDBPaths(profileDir, "Cookies") {
+		attempted++
 		cookies, err := readCookieDomains(cookieDB)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: cannot read cookies DB %s: %v\n", cookieDB, err)
+			failed++
+			lastErr = fmt.Errorf("%s: %w", cookieDB, err)
 			continue
 		}
 		for domain, count := range cookies {
@@ -54,9 +61,12 @@ func Inspect(profileDir, profileName string) (*InspectResult, error) {
 
 	// Read logins from all candidate locations
 	for _, loginDB := range findAllDBPaths(profileDir, "Login Data") {
+		attempted++
 		logins, err := readLoginDomains(loginDB)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: cannot read logins DB %s: %v\n", loginDB, err)
+			failed++
+			lastErr = fmt.Errorf("%s: %w", loginDB, err)
 			continue
 		}
 		for domain, count := range logins {
@@ -67,6 +77,11 @@ func Inspect(profileDir, profileName string) (*InspectResult, error) {
 			}
 			result.TotalLogins += count
 		}
+	}
+
+	// Don't report "0 credentials" when nothing could actually be read.
+	if attempted > 0 && failed == attempted {
+		return nil, fmt.Errorf("cannot read any credential database in %s (is the browser running?): %w", profileDir, lastErr)
 	}
 
 	// Convert map to sorted slice
@@ -111,8 +126,20 @@ func findAllDBPaths(profileDir, dbName string) []string {
 	return found
 }
 
+// readOnlyDSN builds a sqlite URI that modernc.org/sqlite honours: query
+// parameters are only parsed for "file:" URIs, so a bare "path?mode=ro" would
+// be opened read-write. immutable=1 also stops SQLite from taking locks or
+// replaying a hot journal into the live browser database.
+func readOnlyDSN(dbPath string) string {
+	p := filepath.ToSlash(dbPath)
+	if filepath.VolumeName(dbPath) != "" && !strings.HasPrefix(p, "/") {
+		p = "/" + p // Windows drive path: file:/C:/... form
+	}
+	return "file:" + (&url.URL{Path: p}).String() + "?mode=ro&immutable=1"
+}
+
 func readCookieDomains(dbPath string) (map[string]int, error) {
-	db, err := sql.Open("sqlite", dbPath+"?mode=ro")
+	db, err := sql.Open("sqlite", readOnlyDSN(dbPath))
 	if err != nil {
 		return nil, fmt.Errorf("cannot open cookies DB: %w", err)
 	}
@@ -129,15 +156,18 @@ func readCookieDomains(dbPath string) (map[string]int, error) {
 		var domain string
 		var count int
 		if err := rows.Scan(&domain, &count); err != nil {
-			continue
+			return nil, fmt.Errorf("cannot read row: %w", err)
 		}
 		domains[domain] = count
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("cannot read rows: %w", err)
 	}
 	return domains, nil
 }
 
 func readLoginDomains(dbPath string) (map[string]int, error) {
-	db, err := sql.Open("sqlite", dbPath+"?mode=ro")
+	db, err := sql.Open("sqlite", readOnlyDSN(dbPath))
 	if err != nil {
 		return nil, fmt.Errorf("cannot open login DB: %w", err)
 	}
@@ -154,9 +184,12 @@ func readLoginDomains(dbPath string) (map[string]int, error) {
 		var domain string
 		var count int
 		if err := rows.Scan(&domain, &count); err != nil {
-			continue
+			return nil, fmt.Errorf("cannot read row: %w", err)
 		}
 		domains[domain] = count
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("cannot read rows: %w", err)
 	}
 	return domains, nil
 }

@@ -20,7 +20,22 @@ const (
 	lockfileExclusiveLock   = 0x00000002
 	lockfileFailImmediately = 0x00000001
 	processQueryLimitedInfo = 0x1000
+
+	// The OS lock covers one byte far past EOF (offset 0x7FFFFFFF_FFFFFFFF)
+	// instead of byte 0. Win32 byte-range locks are enforced per handle, and
+	// AcquireLock writes the JSON metadata at offset 0 through a second handle
+	// (os.WriteFile). Locking byte 0 made that write fail with
+	// ERROR_LOCK_VIOLATION and also stopped other processes from reading the
+	// metadata. The metadata never reaches this offset, so only competing
+	// LockFileEx calls conflict with it.
+	lockRangeOffsetLow  = 0xFFFFFFFF
+	lockRangeOffsetHigh = 0x7FFFFFFF
 )
+
+// lockOverlapped returns an OVERLAPPED that addresses the lock byte.
+func lockOverlapped() *syscall.Overlapped {
+	return &syscall.Overlapped{Offset: lockRangeOffsetLow, OffsetHigh: lockRangeOffsetHigh}
+}
 
 // isProcessAlive checks if a process with the given PID is still running on Windows.
 func isProcessAlive(pid int) bool {
@@ -44,7 +59,7 @@ func acquireFileLock(path string) (func(), error) {
 	}
 
 	handle := syscall.Handle(f.Fd())
-	ol := new(syscall.Overlapped)
+	ol := lockOverlapped()
 
 	r1, _, err := procLockFileEx.Call(
 		uintptr(handle),
@@ -59,7 +74,7 @@ func acquireFileLock(path string) (func(), error) {
 	}
 
 	return func() {
-		ol2 := new(syscall.Overlapped)
+		ol2 := lockOverlapped()
 		procUnlockFileEx.Call(
 			uintptr(handle),
 			0,

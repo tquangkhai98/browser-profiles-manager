@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/browser"
+	"github.com/tquangkhai98/browser-profiles-manager/internal/config"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/profile"
 )
 
@@ -30,6 +33,22 @@ var createCmd = &cobra.Command{
 			// Validate the browser exists
 			if _, err := browser.FindBrowser(browserID); err != nil {
 				return err
+			}
+		}
+
+		// Refuse to adopt a directory that already exists on disk: Create would
+		// take it over and delete it if saving the config failed. A name that
+		// is already a profile is left to Create's own "already exists" error.
+		if _, err := profile.Get(name); err != nil {
+			profilesDir, err := config.ProfilesDir()
+			if err != nil {
+				return err
+			}
+			dataDir := filepath.Join(profilesDir, name)
+			if _, err := os.Lstat(dataDir); err == nil {
+				return fmt.Errorf("directory %s already exists; move or remove it before creating profile %q", dataDir, name)
+			} else if !os.IsNotExist(err) {
+				return fmt.Errorf("cannot check %s: %w", dataDir, err)
 			}
 		}
 

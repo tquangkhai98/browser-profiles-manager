@@ -20,6 +20,7 @@ var rootCmd = &cobra.Command{
 	Long:          `bpm is a CLI tool for managing isolated Chromium browser profiles across AI-powered development environments like Claude Code, Cursor, and Antigravity.`,
 	Version:       version,
 	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 // Execute runs the root command.

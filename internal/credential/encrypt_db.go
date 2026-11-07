@@ -45,13 +45,18 @@ func EncryptLoginDB(dbPath string) (int, error) {
 	for rows.Next() {
 		var row loginRow
 		if err := rows.Scan(&row.id, &row.passwordValue); err != nil {
-			continue
+			rows.Close()
+			return 0, fmt.Errorf("cannot read login row: %w", err)
 		}
 		// Skip already encrypted passwords (v10 prefix)
 		if IsV10Encrypted(row.passwordValue) {
 			continue
 		}
 		toEncrypt = append(toEncrypt, row)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return 0, fmt.Errorf("cannot read logins: %w", err)
 	}
 	rows.Close()
 
