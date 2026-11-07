@@ -7,7 +7,7 @@ import (
 
 // DetectBrowsers scans for installed Chromium-based browsers on the system.
 func DetectBrowsers() []BrowserInfo {
-	var found []BrowserInfo
+	found := make([]BrowserInfo, 0, len(registry()))
 	seen := make(map[string]bool)
 
 	for _, b := range registry() {

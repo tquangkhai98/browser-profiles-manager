@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,6 +14,7 @@ import (
 	"github.com/tquangkhai98/browser-profiles-manager/internal/browser"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/config"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/credential"
+	"github.com/tquangkhai98/browser-profiles-manager/internal/fsutil"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/install"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/profile"
 )
@@ -288,7 +288,7 @@ func (a *App) ImportProfile(srcPath, name string) error {
 	}
 
 	// Copy contents
-	if err := copyDir(srcPath, p.DataDir); err != nil {
+	if err := fsutil.CopyDir(srcPath, p.DataDir); err != nil {
 		profile.Delete(name, true)
 		return fmt.Errorf("import failed: %w", err)
 	}
@@ -485,7 +485,7 @@ func (a *App) ExportAllProfiles() (string, error) {
 	exported := 0
 	for _, s := range statuses {
 		dstPath := filepath.Join(dir, s.Name)
-		if err := copyDir(s.DataDir, dstPath); err != nil {
+		if err := fsutil.CopyDir(s.DataDir, dstPath); err != nil {
 			return "", fmt.Errorf("failed to export %q: %w", s.Name, err)
 		}
 		exported++
@@ -555,54 +555,4 @@ func (a *App) UninstallMCP(ideID string) (*InstallResult, error) {
 		Action:     result.Action,
 		Message:    result.Message,
 	}, nil
-}
-
-// --- Helper functions ---
-
-func copyDir(src, dst string) error {
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		relPath, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
-		}
-		dstPath := filepath.Join(dst, relPath)
-
-		if info.IsDir() {
-			return os.MkdirAll(dstPath, info.Mode()|0700)
-		}
-
-		// Skip very large files (cache) to speed up import
-		if info.Size() > 500*1024*1024 {
-			return nil
-		}
-
-		return copyFile(path, dstPath)
-	})
-}
-
-func copyFile(src, dst string) error {
-	in, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-
-	if err := os.MkdirAll(filepath.Dir(dst), 0700); err != nil {
-		return err
-	}
-
-	out, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	if _, err := io.Copy(out, in); err != nil {
-		return err
-	}
-	return out.Close()
 }

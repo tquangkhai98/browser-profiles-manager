@@ -83,15 +83,20 @@ func handleProfileUse(ctx context.Context, request mcp.CallToolRequest) (*mcp.Ca
 	}
 
 	// Launch browser
-	_, err = browser.Launch(b.ExePath, p.DataDir)
+	cmd, err := browser.Launch(b.ExePath, p.DataDir)
 	if err != nil {
 		releaseLock()
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
+	go func() {
+		_ = cmd.Wait()
+		releaseLock()
+	}()
+
 	_ = profile.UpdateLastUsed(name)
 
-	return mcp.NewToolResultText(fmt.Sprintf("Launched %s with profile %q. Lock acquired (caller: mcp-server).", b.Name, name)), nil
+	return mcp.NewToolResultText(fmt.Sprintf("Launched %s with profile %q. Lock acquired (caller: mcp-server). The lock is released automatically when the browser exits.", b.Name, name)), nil
 }
 
 func handleProfileStatus(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

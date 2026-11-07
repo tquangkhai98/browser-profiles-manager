@@ -13,11 +13,11 @@ import (
 
 // IDE represents a supported AI IDE.
 type IDE struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	ConfigPath  string `json:"config_path"`
-	Installed   bool   `json:"installed"`
-	BPMEnabled  bool   `json:"bpm_enabled"`
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	ConfigPath string `json:"config_path"`
+	Installed  bool   `json:"installed"`
+	BPMEnabled bool   `json:"bpm_enabled"`
 }
 
 // Result holds the outcome of an install/uninstall operation.

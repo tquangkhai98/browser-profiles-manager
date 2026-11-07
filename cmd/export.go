@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/tquangkhai98/browser-profiles-manager/internal/fsutil"
 
 	"github.com/spf13/cobra"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/profile"
@@ -27,7 +28,7 @@ var exportCmd = &cobra.Command{
 			fmt.Printf("Exporting profile %q → %s...\n", name, dstPath)
 		}
 
-		if err := copyDir(p.DataDir, dstPath); err != nil {
+		if err := fsutil.CopyDir(p.DataDir, dstPath); err != nil {
 			return fmt.Errorf("export failed: %w", err)
 		}
 

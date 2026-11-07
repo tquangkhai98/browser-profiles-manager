@@ -6,10 +6,13 @@ import (
 )
 
 // NewServer creates and configures the bpm MCP server with all tools.
-func NewServer() *server.MCPServer {
+func NewServer(version string) *server.MCPServer {
+	if version == "" {
+		version = "dev"
+	}
 	s := server.NewMCPServer(
 		"bpm",
-		"0.1.0",
+		version,
 	)
 
 	registerTools(s)
