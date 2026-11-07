@@ -114,7 +114,7 @@ jobs:
         shell: bash
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          7z a BPM-${VERSION}-windows-amd64.zip ./desktop/build/bin/BPM.exe
+          7z a BPM-desktop-${VERSION}-windows-amd64.zip ./desktop/build/bin/BPM.exe
           7z a bpm-${VERSION}-windows-amd64.zip ./bpm.exe
 
       # ── Upload artifacts ──
@@ -124,7 +124,8 @@ jobs:
           name: release-${{ runner.os }}
           path: |
             BPM-*
-            bpm-*
+            bpm-*.tar.gz
+            bpm-*.zip
           if-no-files-found: error
           retention-days: 1
           compression-level: 9
@@ -139,7 +140,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev pkg-config
       - run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
       - run: cd desktop && wails build -tags desktop -platform linux/amd64
-      - run: tar -czf BPM-${{ inputs.version }}-linux-amd64.tar.gz -C desktop/build/bin BPM
+      - run: tar -czf BPM-desktop-${{ inputs.version }}-linux-amd64.tar.gz -C desktop/build/bin BPM
       - uses: actions/upload-artifact@v4
         with:
           name: release-desktop-linux
@@ -179,12 +180,12 @@ jobs:
             | File | Platform | Description |
             |------|----------|-------------|
             | `BPM-...-macos-universal.dmg` | macOS (Universal) | 🖥️ Desktop app |
-            | `BPM-...-windows-amd64.zip` | Windows x64 | 🖥️ Desktop app |
+            | `BPM-desktop-...-windows-amd64.zip` | Windows x64 | 🖥️ Desktop app |
             | `bpm-...-macos-universal.tar.gz` | macOS (Universal) | ⌨️ CLI |
             | `bpm-...-windows-amd64.zip` | Windows x64 | ⌨️ CLI |
             | `bpm-...-linux-amd64.tar.gz` | Linux x64 | CLI and headless MCP server |
             | `bpm-...-linux-arm64.tar.gz` | Linux ARM64 | CLI and headless MCP server |
-            | `BPM-...-linux-amd64.tar.gz` | Linux x64 | Desktop app (GTK and WebKit runtime required) |
+            | `BPM-desktop-...-linux-amd64.tar.gz` | Linux x64 | Desktop app (GTK and WebKit runtime required) |
 
             ### Installation
 
@@ -198,5 +199,6 @@ jobs:
             **CLI:** Extract and add to your PATH. Linux CLI binaries support headless operation.
           files: |
             BPM-*
-            bpm-*
+            bpm-*.tar.gz
+            bpm-*.zip
             checksums.txt
