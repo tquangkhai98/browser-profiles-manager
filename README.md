@@ -411,11 +411,14 @@ browser-profiles-manager/
 
 ## Platform Support
 
-| Platform | Status |
-|----------|--------|
-| macOS | ✅ Supported |
-| Windows | ✅ Supported |
-| Linux | CLI and headless MCP server (amd64/arm64); desktop (amd64) |
+| Platform | Desktop app (GUI) | CLI / MCP server |
+|----------|-------------------|------------------|
+| macOS (Intel / Apple Silicon) | ✅ | ✅ |
+| Windows x64 (amd64) | ✅ | ✅ |
+| Linux x64 (amd64) | ✅ | ✅ |
+| Linux ARM64 | No desktop build | ✅ |
+
+Linux x64 includes a graphical desktop app. Headless operation is available through the CLI / MCP server on both Linux architectures. See [Downloads](#downloads) for the corresponding packages.
 
 ---
 
