@@ -38,8 +38,11 @@ func Create(name, browser string) (*Profile, error) {
 	}
 	dataDir := filepath.Join(profilesDir, name)
 
-	// Create profile directory with restricted permissions
-	if err := os.MkdirAll(dataDir, 0700); err != nil {
+	// Create profile directory with restricted permissions without overwriting existing data.
+	if err := os.MkdirAll(profilesDir, 0700); err != nil {
+		return nil, fmt.Errorf("cannot create profiles directory: %w", err)
+	}
+	if err := os.Mkdir(dataDir, 0700); err != nil {
 		return nil, fmt.Errorf("cannot create profile directory: %w", err)
 	}
 

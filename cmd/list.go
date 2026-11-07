@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/profile"
+	browserruntime "github.com/tquangkhai98/browser-profiles-manager/internal/runtime"
 )
 
 var listJSON bool
@@ -37,7 +38,31 @@ var listCmd = &cobra.Command{
 }
 
 func printJSON(profiles []profile.ProfileStatus) error {
-	data, err := json.MarshalIndent(profiles, "", "  ")
+	items := make([]map[string]any, 0, len(profiles))
+	for _, p := range profiles {
+		data, err := json.Marshal(p)
+		if err != nil {
+			return err
+		}
+		var item map[string]any
+		if err = json.Unmarshal(data, &item); err != nil {
+			return err
+		}
+		state, err := browserruntime.Read(p.Name)
+		if err != nil {
+			return err
+		}
+		item["running"] = state != nil
+		if state != nil {
+			item["pid"] = state.PID
+			item["port"] = state.Port
+			item["cdp_http"] = state.CDPHTTP
+			item["webSocketDebuggerUrl"] = state.WebSocket
+			item["headless"] = state.Headless
+		}
+		items = append(items, item)
+	}
+	data, err := json.MarshalIndent(items, "", "  ")
 	if err != nil {
 		return err
 	}

@@ -1,3 +1,5 @@
+//go:build desktop
+
 package main
 
 import (
@@ -139,7 +141,7 @@ func (a *App) OpenProfileDir(name string) error {
 	if err != nil {
 		return err
 	}
-	return exec.Command("open", p.DataDir).Start()
+	return fsutil.OpenPath(p.DataDir)
 }
 
 // --- Browser operations ---
@@ -188,7 +190,7 @@ func (a *App) LaunchBrowser(name string) error {
 	}
 
 	// Launch browser
-	cmd, err := browser.Launch(browserPath, p.DataDir)
+	cmd, err := browser.Launch(browserPath, p.DataDir, browser.LaunchOptions{Headless: false})
 	if err != nil {
 		release()
 		return err
@@ -391,7 +393,7 @@ func (a *App) OpenConfigDir() error {
 	if err != nil {
 		return err
 	}
-	return exec.Command("open", configDir).Start()
+	return fsutil.OpenPath(configDir)
 }
 
 // GetMCPEnabled returns whether MCP server is enabled.

@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/browser"
@@ -12,6 +13,8 @@ import (
 )
 
 var useBrowser string
+var useHeadless bool
+var useCDPPort int
 
 var useCmd = &cobra.Command{
 	Use:   "use <name>",
@@ -58,10 +61,20 @@ var useCmd = &cobra.Command{
 		fmt.Printf("Launching %s with profile %q...\n", b.Name, name)
 
 		// Launch browser
-		proc, err := browser.Launch(b.ExePath, p.DataDir)
+		headless := browser.ResolveHeadless(cmd.Flags().Changed("headless"), useHeadless, os.Getenv("BPM_HEADLESS"), browser.HasDisplay())
+		proc, err := browser.Launch(b.ExePath, p.DataDir, browser.LaunchOptions{Headless: headless, CDPPort: useCDPPort})
 		if err != nil {
 			releaseLock()
 			return err
+		}
+
+		if headless {
+			endpoint, err := browser.ResolveCDPEndpoint(p.DataDir, useCDPPort, 10*time.Second)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: CDP endpoint unavailable: %v\n", err)
+			} else {
+				fmt.Printf("Headless mode: CDP endpoint %s\n", endpoint)
+			}
 		}
 
 		// Update last used timestamp
@@ -95,5 +108,7 @@ var useCmd = &cobra.Command{
 
 func init() {
 	useCmd.Flags().StringVar(&useBrowser, "browser", "", "Override browser (chrome, brave, edge, arc)")
+	useCmd.Flags().BoolVar(&useHeadless, "headless", false, "Run headless (auto-detected if omitted)")
+	useCmd.Flags().IntVar(&useCDPPort, "cdp-port", 0, "Remote debugging port (0 = auto)")
 	rootCmd.AddCommand(useCmd)
 }

@@ -42,9 +42,13 @@ func registerTools(s *server.MCPServer) {
 			mcp.WithDescription("Launch browser with an isolated profile. Acquires a lock."),
 			mcp.WithString("name", mcp.Required(), mcp.Description("Profile name to launch")),
 			mcp.WithString("browser", mcp.Description("Override browser to use")),
+			mcp.WithBoolean("headless", mcp.Description("Run Chromium headless (auto-enabled when no DISPLAY). Defaults to auto-detection.")),
+			mcp.WithNumber("cdp_port", mcp.Description("Remote debugging port for headless mode (0 = auto).")),
 		),
 		handleProfileUse,
 	)
+
+	s.AddTool(mcp.NewTool("profile_stop", mcp.WithDescription("Stop a running profile"), mcp.WithString("name", mcp.Required(), mcp.Description("Profile name to stop"))), handleProfileStop)
 
 	s.AddTool(
 		mcp.NewTool("profile_status",

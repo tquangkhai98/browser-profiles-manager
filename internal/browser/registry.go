@@ -1,6 +1,10 @@
 package browser
 
-import "runtime"
+import (
+	"os/exec"
+	"path/filepath"
+	"runtime"
+)
 
 // BrowserInfo describes a supported Chromium-based browser.
 type BrowserInfo struct {
@@ -82,10 +86,45 @@ func windowsBrowsers() []BrowserInfo {
 }
 
 func linuxBrowsers() []BrowserInfo {
-	return []BrowserInfo{
+	browsers := []BrowserInfo{
 		{Name: "Google Chrome", ID: "chrome", ExePath: "/usr/bin/google-chrome"},
-		{Name: "Google Chrome (Stable)", ID: "chrome", ExePath: "/usr/bin/google-chrome-stable"},
+		{Name: "Google Chrome", ID: "chrome", ExePath: "/usr/bin/google-chrome-stable"},
+		{Name: "Google Chrome", ID: "chrome", ExePath: "/usr/local/bin/google-chrome"},
+		{Name: "Google Chrome", ID: "chrome", ExePath: "/opt/google/chrome/chrome"},
+		{Name: "Google Chrome", ID: "chrome", ExePath: "/snap/bin/chromium"},
+		{Name: "Chromium", ID: "chromium", ExePath: "/usr/bin/chromium"},
+		{Name: "Chromium", ID: "chromium", ExePath: "/usr/bin/chromium-browser"},
+		{Name: "Chromium", ID: "chromium", ExePath: "/usr/local/bin/chromium"},
+		{Name: "Chromium", ID: "chromium", ExePath: "/snap/bin/chromium"},
 		{Name: "Brave Browser", ID: "brave", ExePath: "/usr/bin/brave-browser"},
+		{Name: "Brave Browser", ID: "brave", ExePath: "/usr/local/bin/brave-browser"},
+		{Name: "Brave Browser", ID: "brave", ExePath: "/snap/bin/brave"},
 		{Name: "Microsoft Edge", ID: "edge", ExePath: "/usr/bin/microsoft-edge"},
+		{Name: "Microsoft Edge", ID: "edge", ExePath: "/usr/bin/microsoft-edge-stable"},
 	}
+	seen := make(map[string]bool)
+	key := func(b BrowserInfo) string {
+		p, err := filepath.EvalSymlinks(b.ExePath)
+		if err != nil {
+			p = b.ExePath
+		}
+		return b.ID + "\x00" + p
+	}
+	for _, b := range browsers {
+		seen[key(b)] = true
+	}
+	for _, c := range []struct{ name, id, executable string }{
+		{"Google Chrome", "chrome", "google-chrome"}, {"Google Chrome", "chrome", "google-chrome-stable"},
+		{"Chromium", "chromium", "chromium"}, {"Chromium", "chromium", "chromium-browser"},
+		{"Brave Browser", "brave", "brave-browser"}, {"Microsoft Edge", "edge", "microsoft-edge"},
+	} {
+		if path, err := exec.LookPath(c.executable); err == nil {
+			b := BrowserInfo{Name: c.name, ID: c.id, ExePath: path}
+			if !seen[key(b)] {
+				browsers = append(browsers, b)
+				seen[key(b)] = true
+			}
+		}
+	}
+	return browsers
 }
