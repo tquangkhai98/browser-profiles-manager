@@ -3,7 +3,7 @@
 [![Release](https://img.shields.io/github/v/release/tquangkhai98/browser-profiles-manager?color=blue)](https://github.com/tquangkhai98/browser-profiles-manager/releases/latest)
 [![Build](https://github.com/tquangkhai98/browser-profiles-manager/actions/workflows/release.yml/badge.svg)](https://github.com/tquangkhai98/browser-profiles-manager/actions/workflows/release.yml)
 [![Go Report](https://goreportcard.com/badge/github.com/tquangkhai98/browser-profiles-manager)](https://goreportcard.com/report/github.com/tquangkhai98/browser-profiles-manager)
-[![Go](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go&logoColor=white)]()
+[![Go](https://img.shields.io/badge/Go-1.25.5+-00ADD8?logo=go&logoColor=white)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)]()
 
@@ -48,11 +48,9 @@ Chrome DevTools MCP's `--isolated` option covers throwaway profiles.
 ## Quick Start
 
 ```bash
-# Install (requires Go 1.24+)
-go install github.com/tquangkhai98/browser-profiles-manager@latest
-
-# Or download a pre-built binary from GitHub Releases:
-# https://github.com/tquangkhai98/browser-profiles-manager/releases
+# Download a CLI archive from GitHub Releases, extract it and add bpm to PATH:
+# https://github.com/tquangkhai98/browser-profiles-manager/releases/latest
+# Chrome or Chromium must be installed before creating/launching profiles.
 
 # Create a profile
 bpm create work-staging
@@ -75,9 +73,24 @@ bpm map ~/projects/my-app work-staging
 
 ---
 
+## Downloads
+
+Choose an artifact from [GitHub Releases](https://github.com/tquangkhai98/browser-profiles-manager/releases/latest) (`<version>` includes the `v` prefix):
+
+| Platform | CLI / MCP server | Desktop |
+|----------|------------------|---------|
+| macOS Universal | `bpm-<version>-macos-universal.tar.gz` | `BPM-<version>-macos-universal.dmg` |
+| Windows x64 | `bpm-<version>-windows-amd64.zip` | `BPM-desktop-<version>-windows-amd64.zip` |
+| Linux x64 | `bpm-<version>-linux-amd64.tar.gz` | `BPM-desktop-<version>-linux-amd64.tar.gz` |
+| Linux ARM64 | `bpm-<version>-linux-arm64.tar.gz` | — |
+
+Verify downloads against `checksums.txt`. Linux desktop requires GTK 3 and WebKitGTK 4.0 runtime libraries. On macOS, open the DMG and drag BPM to Applications; an unsigned build may require **System Settings → Privacy & Security → Open Anyway**. On Windows, extract the desktop ZIP and run `BPM.exe`.
+
+To install from source, use `go install github.com/tquangkhai98/browser-profiles-manager@latest` with Go 1.25.5+; the installed executable is named `browser-profiles-manager`, so rename it to `bpm` in your Go binary directory, or clone the repo and run `make build` to produce `./bpm`.
+
 ## Linux (headless / server)
 
-Download `bpm-<version>-linux-amd64.tar.gz` or `bpm-<version>-linux-arm64.tar.gz` from [GitHub Releases](https://github.com/tquangkhai98/browser-profiles-manager/releases), extract it and put `bpm` on your PATH, or install with `go install github.com/tquangkhai98/browser-profiles-manager@latest`. Install Chromium or Chrome on the host.
+Download `bpm-<version>-linux-amd64.tar.gz` or `bpm-<version>-linux-arm64.tar.gz` from [GitHub Releases](https://github.com/tquangkhai98/browser-profiles-manager/releases), extract it and put `bpm` on your PATH. Install Chromium or Chrome on the host.
 
 ```bash
 bpm create work
@@ -96,9 +109,9 @@ Connect from Playwright on the same host:
 const browser = await chromium.connectOverCDP("http://127.0.0.1:<port>");
 ```
 
-Stop the browser with `bpm stop work`. CDP listens on loopback; remote clients need a secure tunnel. The CLI and MCP server are one CGO-free binary. `profile_use` starts the same detached browser and returns its CDP state; `profile_list` reports running state and `profile_stop` stops it.
+Stop a detached browser with `bpm stop work` (default timeout: 5s; use `--timeout 0s` to force termination). `bpm stop` and MCP `profile_stop` refuse to stop a profile held by `bpm use`, the desktop app, or another bpm operation; close that owner instead. CDP listens on loopback; remote clients need a secure tunnel. The CLI and MCP server are one CGO-free binary. `profile_use` starts the same detached browser and returns its CDP state; `profile_list` reports running state and `profile_stop` stops it.
 
-Only one live browser can use a profile. `bpm launch work --wait 30s` waits for its lock; stale locks are cleaned automatically. Set `BPM_CONFIG_DIR` to relocate the configuration, run state, and logs. Headless mode is selected automatically when no display is available, or with `BPM_HEADLESS=1`. Use `--headless=false` to override it and `--cdp-port 9222` to select a port. When running as root, bpm adds `--no-sandbox` to headless Chromium.
+Only one live browser can use a profile. `bpm launch work --wait 30s` waits for its lock; stale locks are cleaned automatically. Set `BPM_CONFIG_DIR` to relocate the configuration, run state, and logs; use `BPM_DATA_DIR` for profile storage (unless a custom profiles directory is configured in the desktop settings). Headless mode is selected automatically when no display is available, or with `BPM_HEADLESS=1`. Use `--headless=false` to override it and `--cdp-port 9222` to select a port. When running as root, bpm adds `--no-sandbox` to headless Chromium.
 
 On Linux every browser launch uses `--password-store=basic` so profiles can move between machines without depending on a host keyring. Cookies are encrypted with a fixed key, so protect the profile directory from unauthorized access.
 
@@ -116,7 +129,7 @@ bpm import ~/work.tar.gz --name work
 bpm launch work --headless --json
 ```
 
-Linux launches always pass `--password-store=basic`, so cookies created with that setting are not sealed to the host keyring. Cookies created with another operating system or keyring may not be portable. The archive contains session cookies; treat it as a secret. A copied Chrome user-data directory, such as `/config/chrome` from a linuxserver/chrome container using the basic password store, can also be imported directly.
+Linux launches always pass `--password-store=basic`, so cookies created with that setting are not sealed to the host keyring. Cookies created with another operating system or keyring may not be portable. The archive contains session cookies; treat it as a secret. A copied Chrome user-data directory, such as `/config/chrome` from a linuxserver/chrome container using the basic password store, can also be imported directly. Imports accept `.tar.gz`, `.tgz`, and `.zip` archives and preserve the browser recorded by bpm exports. Export refuses a locked profile unless `--force` is supplied; stop the browser first for a consistent backup.
 
 ## MCP Integration
 
@@ -137,13 +150,14 @@ Add to your AI IDE's MCP config (Claude Code, Cursor, Antigravity):
 
 | Tool | Description |
 |------|-------------|
-| `profile_create` | Create a new isolated browser profile |
+| `profile_create` | Create a profile; an explicit browser must be installed |
 | `profile_list` | List all profiles with status |
-| `profile_use` | Launch browser with profile |
+| `profile_use` | Launch a detached browser; accepts `headless` and `cdp_port`, returns CDP state |
+| `profile_stop` | Stop a detached browser |
 | `profile_status` | Check lock status |
-| `profile_delete` | Delete a profile |
-| `mapping_set` | Map directory to profile |
-| `mapping_get` | Resolve profile for a directory |
+| `profile_delete` | Delete profile and data; `force` permits deletion while locked |
+| `mapping_set` | Map an absolute directory path to a profile |
+| `mapping_get` | Resolve profile for an absolute directory path |
 | `creds_inspect` | List credentials in a profile |
 | `creds_sync` | Sync credentials between profiles |
 | `browser_detect` | List installed browsers |
@@ -199,13 +213,11 @@ Stable, official, uses accessibility tree for reliable element interaction.
 
 Connect to a running Chrome instance launched by bpm. Provides DOM inspection, Network monitoring, and Console access.
 
-First launch Chrome manually with remote debugging enabled:
+Launch through bpm so it owns the profile lock and reports the CDP endpoint:
 
 ```bash
-# macOS example — launch Chrome with remote debugging on port 9222
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-  --user-data-dir="$(bpm list --json | jq -r '.[] | select(.name=="lms-admin") | .path')" \
-  --remote-debugging-port=9222
+bpm launch lms-admin --cdp-port 9222 --json
+# Add --headless on a server; stop it with: bpm stop lms-admin
 ```
 
 ```json
@@ -246,7 +258,7 @@ AI-native browser automation — describe actions in plain language instead of C
 | **Browser Use MCP** | ✅ | ✅ | Natural language automation |
 | bpm CLI only | ✅ | ❌ | Manual testing |
 
-> **⚠️ Important:** Never open the same profile in two browsers simultaneously — bpm uses file locks to prevent profile corruption.
+> **⚠️ Important:** Never open the same profile in two browsers simultaneously. External tools using `--user-data-dir` directly bypass bpm locks; prefer connecting over CDP to a browser started with `bpm launch`. Expand `~` to an absolute path in MCP JSON configs; clients may not expand it automatically.
 
 ---
 
@@ -257,7 +269,9 @@ bpm create <name>          Create isolated profile
 bpm list [--json]          List profiles with status
 bpm delete <name>          Delete profile + data
 bpm status <name> [--json] Check lock/usage status
-bpm use <name>             Launch browser with profile
+bpm use <name>             Launch browser in foreground
+bpm launch <name> [--json] Launch detached browser with CDP
+bpm stop <name> [--json]   Stop detached browser (--timeout 5s)
 bpm detect [--json]        List installed browsers
 bpm map <dir> <profile>    Map project dir → profile
 bpm map --auto [--json]    Auto-resolve profile for cwd
@@ -279,7 +293,9 @@ $ bpm list --json
   {
     "name": "work-staging",
     "browser": "chrome",
+    "data_dir": "/home/user/.local/share/bpm/profiles/work-staging",
     "locked": false,
+    "running": false,
     "created_at": "2026-03-29T12:00:00Z"
   }
 ]
@@ -310,10 +326,10 @@ $ bpm creds work-staging --json
 
 When you login to GitHub in one browser profile, that login is stored as cookies and saved passwords. **Credential sync** copies those databases to another profile:
 
-1. Reads Chromium SQLite databases (`Cookies`, `Login Data`) from source
-2. Backs up target profile's databases
-3. Copies databases to target via atomic write (temp file → rename)
-4. ⚠️ **bpm never decrypts passwords** — they work because Chromium uses OS-level keychain (macOS Keychain / Windows DPAPI)
+1. Locks both profiles; close both browsers before syncing.
+2. Rejects sync between profiles assigned to different browsers.
+3. Copies credential databases into the target's `Default/` directory via atomic writes and removes stale SQLite side files. Existing target databases are replaced; export the target first if you need a backup.
+4. Encrypted values stay encrypted; plaintext saved passwords are encrypted for Chrome compatibility on macOS. Sync does not make OS/keyring-bound credentials portable across machines.
 
 ---
 
@@ -342,8 +358,8 @@ When you login to GitHub in one browser profile, that login is stored as cookies
 
 | Tool | Version | Install |
 |------|---------|---------|
-| Go | ≥ 1.24 | `brew install go` |
-| Wails CLI | v2 | `go install github.com/wailsapp/wails/v2/cmd/wails@latest` |
+| Go | ≥ 1.25.5 | `brew install go` |
+| Wails CLI | v2.12.0 | `go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0` |
 | Node.js | ≥ 18 | `brew install node` (for desktop frontend) |
 
 ### Build & Test
@@ -353,11 +369,13 @@ make build          # Build CLI with version info
 make test           # Run all tests
 make cover          # Generate coverage report
 make lint           # Run staticcheck
-make install        # Install to $GOPATH/bin
+make install        # Install as browser-profiles-manager in $GOPATH/bin
 make desktop        # Build desktop app
 make dev            # Desktop dev mode with hot-reload
 make clean          # Remove build artifacts
 ```
+
+Direct Go builds of the desktop package require `-tags desktop`. The desktop **Reset settings** action preserves directory mappings.
 
 ### Project Structure
 
@@ -371,6 +389,8 @@ browser-profiles-manager/
 │   ├── credential/         #   Credential read/sync (SQLite)
 │   ├── mapping/            #   Directory ↔ profile mapping
 │   ├── config/             #   Configuration management
+│   ├── runtime/            #   Detached browsers + CDP state
+│   ├── transfer/           #   Profile archive import/export
 │   └── mcp/                #   MCP server implementation
 ├── desktop/                # Wails desktop app
 ├── Makefile                # Build automation
