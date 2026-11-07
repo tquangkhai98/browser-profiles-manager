@@ -24,7 +24,7 @@ AI IDEs (Claude Code, Cursor, Antigravity) can connect by adding bpm to their MC
   }`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		s := mcpserver.NewServer()
+		s := mcpserver.NewServer(version)
 
 		fmt.Fprintln(cmd.ErrOrStderr(), "bpm MCP server started (stdio)")
 

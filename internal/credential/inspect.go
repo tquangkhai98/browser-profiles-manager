@@ -19,10 +19,10 @@ type SiteCredential struct {
 
 // InspectResult holds the credential inspection results for a profile.
 type InspectResult struct {
-	ProfileName string           `json:"profile_name"`
-	Sites       []SiteCredential `json:"sites"`
-	TotalCookies int             `json:"total_cookies"`
-	TotalLogins  int             `json:"total_logins"`
+	ProfileName  string           `json:"profile_name"`
+	Sites        []SiteCredential `json:"sites"`
+	TotalCookies int              `json:"total_cookies"`
+	TotalLogins  int              `json:"total_logins"`
 }
 
 // Inspect reads the Chromium cookie and login databases from a profile directory.

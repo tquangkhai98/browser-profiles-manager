@@ -5,7 +5,7 @@ import "runtime"
 // BrowserInfo describes a supported Chromium-based browser.
 type BrowserInfo struct {
 	Name    string `json:"name"`
-	ID      string `json:"id"`      // Short identifier: chrome, brave, edge, arc
+	ID      string `json:"id"`       // Short identifier: chrome, brave, edge, arc
 	ExePath string `json:"exe_path"` // Full path to executable
 }
 

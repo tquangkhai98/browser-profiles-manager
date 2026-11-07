@@ -24,7 +24,6 @@ func lockFile(path string) (func(), error) {
 	unlock := func() {
 		syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
 		f.Close()
-		os.Remove(path)
 	}
 
 	return unlock, nil
