@@ -3,6 +3,7 @@
 package profile
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"syscall"
@@ -16,7 +17,7 @@ func isProcessAlive(pid int) bool {
 	}
 	// On Unix, FindProcess always succeeds. Send signal 0 to check if alive.
 	err = process.Signal(syscall.Signal(0))
-	return err == nil
+	return processAliveResult(err)
 }
 
 // acquireFileLock acquires an exclusive flock on the given path.
@@ -35,4 +36,8 @@ func acquireFileLock(path string) (func(), error) {
 		syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
 		f.Close()
 	}, nil
+}
+
+func processAliveResult(err error) bool {
+	return !errors.Is(err, syscall.ESRCH) && !errors.Is(err, os.ErrProcessDone)
 }

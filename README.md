@@ -5,7 +5,7 @@
 [![Go Report](https://goreportcard.com/badge/github.com/tquangkhai98/browser-profiles-manager)](https://goreportcard.com/report/github.com/tquangkhai98/browser-profiles-manager)
 [![Go](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go&logoColor=white)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)]()
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)]()
 
 > Centralized browser profile management for AI IDEs
 
@@ -74,6 +74,49 @@ bpm map ~/projects/my-app work-staging
 ```
 
 ---
+
+## Linux (headless / server)
+
+Download `bpm-<version>-linux-amd64.tar.gz` or `bpm-<version>-linux-arm64.tar.gz` from [GitHub Releases](https://github.com/tquangkhai98/browser-profiles-manager/releases), extract it and put `bpm` on your PATH, or install with `go install github.com/tquangkhai98/browser-profiles-manager@latest`. Install Chromium or Chrome on the host.
+
+```bash
+bpm create work
+bpm launch work --headless --json
+```
+
+The launch returns one JSON object, for example:
+
+```json
+{"profile":"work","browser":"chrome","pid":1234,"port":41234,"cdp_http":"http://127.0.0.1:41234","webSocketDebuggerUrl":"ws://127.0.0.1:41234/devtools/browser/example","headless":true}
+```
+
+Connect from Playwright on the same host:
+
+```javascript
+const browser = await chromium.connectOverCDP("http://127.0.0.1:<port>");
+```
+
+Stop the browser with `bpm stop work`. CDP listens on loopback; remote clients need a secure tunnel. The CLI and MCP server are one CGO-free binary. `profile_use` starts the same detached browser and returns its CDP state; `profile_list` reports running state and `profile_stop` stops it.
+
+Only one live browser can use a profile. `bpm launch work --wait 30s` waits for its lock; stale locks are cleaned automatically. Set `BPM_CONFIG_DIR` to relocate the configuration, run state, and logs. Headless mode is selected automatically when no display is available, or with `BPM_HEADLESS=1`. Use `--headless=false` to override it and `--cdp-port 9222` to select a port. When running as root, bpm adds `--no-sandbox` to headless Chromium.
+
+On Linux every browser launch uses `--password-store=basic` so profiles can move between machines without depending on a host keyring. Cookies are encrypted with a fixed key, so protect the profile directory from unauthorized access.
+
+---
+
+## Move a profile between machines
+
+Stop the browser before exporting, then copy the archive to the destination machine:
+
+```bash
+bpm stop work
+bpm export work ~/work.tar.gz
+# Copy ~/work.tar.gz to the destination machine.
+bpm import ~/work.tar.gz --name work
+bpm launch work --headless --json
+```
+
+Linux launches always pass `--password-store=basic`, so cookies created with that setting are not sealed to the host keyring. Cookies created with another operating system or keyring may not be portable. The archive contains session cookies; treat it as a secret. A copied Chrome user-data directory, such as `/config/chrome` from a linuxserver/chrome container using the basic password store, can also be imported directly.
 
 ## MCP Integration
 
@@ -221,8 +264,8 @@ bpm map --auto [--json]    Auto-resolve profile for cwd
 bpm map --list [--json]    Show all mappings
 bpm creds <name> [--json]  Inspect credentials in profile
 bpm sync <src> <dst>       Sync credentials between profiles
-bpm import <path> <name>   Import existing Chrome profile
-bpm export <name> <path>   Export profile for backup
+bpm import <path> [name]  Import a Chrome profile or archive
+bpm export <name> <path>   Export a profile archive
 bpm serve                  Start MCP server
 ```
 
@@ -352,7 +395,7 @@ browser-profiles-manager/
 |----------|--------|
 | macOS | ✅ Supported |
 | Windows | ✅ Supported |
-| Linux | 🔜 Planned |
+| Linux | CLI and headless MCP server (amd64/arm64); desktop (amd64) |
 
 ---
 

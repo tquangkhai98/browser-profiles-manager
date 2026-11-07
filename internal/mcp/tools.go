@@ -4,12 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/browser"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/credential"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/mapping"
 	"github.com/tquangkhai98/browser-profiles-manager/internal/profile"
+	browserruntime "github.com/tquangkhai98/browser-profiles-manager/internal/runtime"
 )
 
 func handleProfileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -47,8 +50,27 @@ func handleProfileList(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	result, _ := json.MarshalIndent(profiles, "", "  ")
-	return mcp.NewToolResultText(string(result)), nil
+	result := make([]map[string]any, 0, len(profiles))
+	for _, p := range profiles {
+		data, _ := json.Marshal(p)
+		var item map[string]any
+		_ = json.Unmarshal(data, &item)
+		state, err := browserruntime.Read(p.Name)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		item["running"] = state != nil
+		if state != nil {
+			item["pid"] = state.PID
+			item["port"] = state.Port
+			item["cdp_http"] = state.CDPHTTP
+			item["webSocketDebuggerUrl"] = state.WebSocket
+			item["headless"] = state.Headless
+		}
+		result = append(result, item)
+	}
+	data, _ := json.MarshalIndent(result, "", "  ")
+	return mcp.NewToolResultText(string(data)), nil
 }
 
 func handleProfileUse(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -57,46 +79,31 @@ func handleProfileUse(ctx context.Context, request mcp.CallToolRequest) (*mcp.Ca
 		return mcp.NewToolResultError("name is required"), nil
 	}
 
-	p, err := profile.Get(name)
+	headless := request.GetBool("headless", browser.ResolveHeadless(false, false, os.Getenv("BPM_HEADLESS"), browser.HasDisplay()))
+	state, err := browserruntime.Launch(name, browserruntime.Options{Browser: request.GetString("browser", ""), Headless: headless, Port: request.GetInt("cdp_port", 0)})
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
+	result := map[string]any{"profile": state.Profile, "browser": state.Browser, "pid": state.PID, "port": state.Port, "cdp_http": state.CDPHTTP, "webSocketDebuggerUrl": state.WebSocket, "headless": state.Headless}
+	data, _ := json.Marshal(result)
+	return mcp.NewToolResultText(string(data)), nil
+}
 
-	browserID := request.GetString("browser", p.Browser)
-	if browserID == "" {
-		b, err := browser.DefaultBrowser()
-		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
-		}
-		browserID = b.ID
+func handleProfileStop(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	name, err := request.RequireString("name")
+	if err != nil {
+		return mcp.NewToolResultError("name is required"), nil
 	}
-
-	b, err := browser.FindBrowser(browserID)
+	stopped, err := browserruntime.Stop(name, 5*time.Second)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
-
-	// Acquire lock
-	releaseLock, err := profile.AcquireLock(p.DataDir, "mcp-server")
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("cannot lock profile: %s", err)), nil
+	result := map[string]any{"profile": name, "stopped": stopped}
+	if !stopped {
+		result["reason"] = "not running"
 	}
-
-	// Launch browser
-	cmd, err := browser.Launch(b.ExePath, p.DataDir)
-	if err != nil {
-		releaseLock()
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	go func() {
-		_ = cmd.Wait()
-		releaseLock()
-	}()
-
-	_ = profile.UpdateLastUsed(name)
-
-	return mcp.NewToolResultText(fmt.Sprintf("Launched %s with profile %q. Lock acquired (caller: mcp-server). The lock is released automatically when the browser exits.", b.Name, name)), nil
+	data, _ := json.Marshal(result)
+	return mcp.NewToolResultText(string(data)), nil
 }
 
 func handleProfileStatus(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

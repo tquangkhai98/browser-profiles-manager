@@ -6,11 +6,20 @@ COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 DATE    ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 LDFLAGS  = -trimpath -ldflags "-s -w -X github.com/tquangkhai98/browser-profiles-manager/cmd.version=$(VERSION) -X github.com/tquangkhai98/browser-profiles-manager/cmd.commit=$(COMMIT) -X github.com/tquangkhai98/browser-profiles-manager/cmd.date=$(DATE)"
 
-.PHONY: build test lint clean install desktop dev
+.PHONY: build build-linux build-headless test lint clean install desktop dev
 
 ## Build CLI binary with version info
 build:
-	go build $(LDFLAGS) -o bpm .
+	CGO_ENABLED=0 go build $(LDFLAGS) -o bpm .
+
+## Build static Linux CLI binaries
+build-linux:
+	mkdir -p dist
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o dist/bpm-linux-amd64 .
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o dist/bpm-linux-arm64 .
+
+## The CLI and MCP server together form the headless build
+build-headless: build
 
 ## Run all tests
 test:
@@ -31,7 +40,7 @@ lint:
 clean:
 	rm -f bpm bpm.exe
 	rm -f coverage.out coverage.html
-	rm -rf build/
+	rm -rf build/ dist/
 
 ## Install to GOPATH/bin
 install:
@@ -39,11 +48,11 @@ install:
 
 ## Build desktop app (Wails)
 desktop:
-	cd desktop && wails build
+	cd desktop && wails build -tags desktop
 
 ## Run desktop app in dev mode
 dev:
-	cd desktop && wails dev
+	cd desktop && wails dev -tags desktop
 
 ## Show help
 help:
@@ -51,6 +60,8 @@ help:
 	@echo ""
 	@echo "Targets:"
 	@echo "  build    Build CLI binary with version info"
+	@echo "  build-linux     Build Linux amd64 and arm64 CLI binaries"
+	@echo "  build-headless  Build the CGO-free CLI and MCP server"
 	@echo "  test     Run all tests"
 	@echo "  cover    Run tests with coverage report"
 	@echo "  lint     Run staticcheck linter"

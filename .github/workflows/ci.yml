@@ -26,3 +26,48 @@ jobs:
       - run: go vet ./...
       - run: go build ./...
       - run: go test ./... -count=1
+
+  linux-binaries:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build and check static binary
+        env:
+          CGO_ENABLED: 0
+          GOOS: linux
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          mkdir -p dist
+          go build -trimpath -ldflags "-s -w -X github.com/tquangkhai98/browser-profiles-manager/cmd.version=ci-${{ github.sha }}" -o dist/bpm-linux-${GOARCH} .
+          file dist/bpm-linux-${GOARCH}
+          ! file dist/bpm-linux-${GOARCH} | grep -q 'dynamically linked'
+          if [ "$GOARCH" = amd64 ]; then
+            ./dist/bpm-linux-amd64 --version
+            ./dist/bpm-linux-amd64 detect --help
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bpm-linux-${{ matrix.arch }}
+          path: dist/bpm-linux-${{ matrix.arch }}
+
+  desktop-linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev pkg-config
+      - run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+      - run: cd desktop && wails build -tags desktop -platform linux/amd64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BPM-desktop-linux-amd64
+          path: desktop/build/bin/BPM
+          if-no-files-found: error

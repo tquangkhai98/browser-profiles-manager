@@ -17,46 +17,67 @@ type LockInfo struct {
 	LockedAt time.Time `json:"locked_at"`
 }
 
-// AcquireLock attempts to lock a profile directory.
-// It writes a .bpm.lock file with metadata and acquires an OS-level file lock.
+// AcquireLock holds the acquisition guard until release.
 func AcquireLock(profileDir, caller string) (func(), error) {
-	lockPath := filepath.Join(profileDir, lockFileName)
-
-	// Check for stale lock first
-	if existing, _ := readLockInfo(lockPath); existing != nil {
-		if !isProcessAlive(existing.PID) {
-			// Stale lock — remove it silently
-			os.Remove(lockPath)
-		} else {
-			return nil, fmt.Errorf("profile is already locked by PID %d (%s) since %s",
-				existing.PID, existing.Caller, existing.LockedAt.Format(time.RFC3339))
-		}
-	}
-
-	// Acquire OS-level lock
-	unlock, err := acquireFileLock(lockPath)
+	unlock, err := acquireFileLock(filepath.Join(profileDir, ".bpm.lock.guard"))
 	if err != nil {
+		if info, _ := readLockInfo(filepath.Join(profileDir, lockFileName)); info != nil && isProcessAlive(info.PID) {
+			return nil, fmt.Errorf("profile is already in use by pid %d (%s) since %s", info.PID, info.Caller, info.LockedAt.Format(time.RFC3339))
+		}
 		return nil, fmt.Errorf("cannot acquire file lock: %w", err)
 	}
-
-	// Write lock metadata
-	info := LockInfo{
-		PID:      os.Getpid(),
-		Caller:   caller,
-		LockedAt: time.Now().UTC(),
-	}
-	data, _ := json.MarshalIndent(info, "", "  ")
-	if err := os.WriteFile(lockPath, data, 0600); err != nil {
+	path := filepath.Join(profileDir, lockFileName)
+	if existing, _ := readLockInfo(path); existing != nil && isProcessAlive(existing.PID) {
 		unlock()
-		return nil, fmt.Errorf("cannot write lock file: %w", err)
+		return nil, fmt.Errorf("profile is already in use by pid %d (%s) since %s", existing.PID, existing.Caller, existing.LockedAt.Format(time.RFC3339))
 	}
-
-	release := func() {
-		os.Remove(lockPath)
+	if err := WriteLock(profileDir, os.Getpid(), caller); err != nil {
 		unlock()
+		return nil, err
 	}
-	return release, nil
+	return func() { os.Remove(path); unlock() }, nil
 }
+
+// WriteLock updates lock metadata while the acquisition guard is held.
+func WriteLock(profileDir string, pid int, caller string) error {
+	data, err := json.MarshalIndent(LockInfo{PID: pid, Caller: caller, LockedAt: time.Now().UTC()}, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(profileDir, lockFileName), data, 0600)
+}
+
+// AcquireForHandoff acquires a lock and exposes a handoff that preserves metadata.
+func AcquireForHandoff(profileDir, caller string) (release func(), handoff func(int) error, err error) {
+	unlock, err := acquireFileLock(filepath.Join(profileDir, ".bpm.lock.guard"))
+	if err != nil {
+		if info, _ := readLockInfo(filepath.Join(profileDir, lockFileName)); info != nil && isProcessAlive(info.PID) {
+			return nil, nil, fmt.Errorf("profile is already in use by pid %d (%s) since %s", info.PID, info.Caller, info.LockedAt.Format(time.RFC3339))
+		}
+		return nil, nil, err
+	}
+	path := filepath.Join(profileDir, lockFileName)
+	if info, _ := readLockInfo(path); info != nil && isProcessAlive(info.PID) {
+		unlock()
+		return nil, nil, fmt.Errorf("profile is already in use by pid %d (%s) since %s", info.PID, info.Caller, info.LockedAt.Format(time.RFC3339))
+	}
+	if err = WriteLock(profileDir, os.Getpid(), caller); err != nil {
+		unlock()
+		return nil, nil, err
+	}
+	release = func() { os.Remove(path); unlock() }
+	handoff = func(pid int) error {
+		err := WriteLock(profileDir, pid, caller)
+		if err == nil {
+			unlock()
+		}
+		return err
+	}
+	return release, handoff, nil
+}
+
+// ProcessAlive reports whether a PID still exists.
+func ProcessAlive(pid int) bool { return pid > 0 && isProcessAlive(pid) }
 
 // ReleaseLock removes the lock file from a profile directory.
 func ReleaseLock(profileDir string) error {
@@ -81,7 +102,14 @@ func IsLocked(profileDir string) (bool, *LockInfo) {
 	// Check if the locking process is still alive
 	if !isProcessAlive(info.PID) {
 		// Stale lock — clean it up
-		os.Remove(lockPath)
+		unlock, err := acquireFileLock(filepath.Join(profileDir, ".bpm.lock.guard"))
+		if err == nil {
+			current, _ := readLockInfo(lockPath)
+			if current != nil && current.PID == info.PID && !isProcessAlive(current.PID) {
+				os.Remove(lockPath)
+			}
+			unlock()
+		}
 		return false, nil
 	}
 
